@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choose Your Meal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="flex items-center">
+                    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" 
+                         class="h-8 w-8 mr-2">
+                    <span class="text-xl font-bold text-gray-800">Office Lunch</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-gray-600 mr-4">Hi, <%= user.username %></span>
+                    <a href="/logout" 
+                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-4xl mx-auto py-12 px-4">
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Tomorrow's Meal Selection</h2>
+            
+            <form action="/preference" method="post">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Vegetarian Option -->
+                    <label class="cursor-pointer">
+                        <input type="radio" name="preference" value="veg" 
+                               class="hidden peer" <%= preference === 'veg' ? 'checked' : '' %>>
+                        <div class="p-6 border-2 rounded-xl peer-checked:border-green-500 
+                                  peer-checked:bg-green-50 hover:border-green-300 transition-all">
+                            <div class="text-center">
+                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" 
+                                     class="w-16 h-16 mx-auto mb-4">
+                                <h3 class="text-xl font-semibold mb-2">Vegetarian</h3>
+                                <p class="text-gray-600">Fresh vegetables and plant-based proteins</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Chicken Option -->
+                    <label class="cursor-pointer">
+                        <input type="radio" name="preference" value="chicken" 
+                               class="hidden peer" <%= preference === 'chicken' ? 'checked' : '' %>>
+                        <div class="p-6 border-2 rounded-xl peer-checked:border-orange-500 
+                                  peer-checked:bg-orange-50 hover:border-orange-300 transition-all">
+                            <div class="text-center">
+                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046771.png" 
+                                     class="w-16 h-16 mx-auto mb-4">
+                                <h3 class="text-xl font-semibold mb-2">Chicken</h3>
+                                <p class="text-gray-600">Grilled chicken with seasonal sides</p>
+                            </div>
+                        </div>
+                    </label>
+
+                    <!-- Fish Option -->
+                    <label class="cursor-pointer">
+                        <input type="radio" name="preference" value="fish" 
+                               class="hidden peer" <%= preference === 'fish' ? 'checked' : '' %>>
+                        <div class="p-6 border-2 rounded-xl peer-checked:border-blue-500 
+                                  peer-checked:bg-blue-50 hover:border-blue-300 transition-all">
+                            <div class="text-center">
+                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046769.png" 
+                                     class="w-16 h-16 mx-auto mb-4">
+                                <h3 class="text-xl font-semibold mb-2">Fish</h3>
+                                <p class="text-gray-600">Fresh seafood with lemon butter sauce</p>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button type="submit" 
+                            class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 
+                                   transition-all transform hover:scale-105">
+                        Save Preference
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
