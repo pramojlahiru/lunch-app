@@ -10,11 +10,12 @@ const app = express();
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public')); // Serve static files
+app.use(express.static('public'));
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback_secret',
+  secret: process.env.SESSION_SECRET || 'super-secret-key',
   resave: false,
-  saveUninitialized: false
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -46,12 +47,19 @@ passport.deserializeUser((id, done) => {
 // Routes
 app.get('/', (req, res) => res.redirect('/login'));
 
-app.get('/login', (req, res) => res.render('login', { error: req.query.error }));
+app.get('/login', (req, res) => res.render('login', { 
+  error: req.query.error 
+}));
 
 app.post('/login', passport.authenticate('local', {
   successRedirect: '/home',
   failureRedirect: '/login?error=1'
 }));
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  res.redirect('/login');
+});
 
 app.get('/home', ensureAuthenticated, async (req, res) => {
   try {
@@ -62,7 +70,11 @@ app.get('/home', ensureAuthenticated, async (req, res) => {
         (err, row) => err ? reject(err) : resolve(row)
       );
     });
-    res.render('home', { user: req.user, preference: preference?.preference });
+    res.render('home', { 
+      user: req.user, 
+      preference: preference?.preference,
+      success: req.query.success 
+    });
   } catch (err) {
     console.error(err);
     res.redirect('/login');
@@ -78,7 +90,7 @@ app.post('/preference', ensureAuthenticated, async (req, res) => {
         (err) => err ? reject(err) : resolve()
       );
     });
-    res.redirect('/home');
+    res.redirect('/home?success=1');
   } catch (err) {
     console.error(err);
     res.redirect('/home');
@@ -103,7 +115,7 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
   }
 });
 
-// Middleware functions
+// Middleware
 function ensureAuthenticated(req, res, next) {
   if (req.isAuthenticated()) return next();
   res.redirect('/login');
@@ -115,4 +127,4 @@ function ensureAdmin(req, res, next) {
 }
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

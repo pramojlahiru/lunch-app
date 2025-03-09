@@ -5,21 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose Your Meal</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="bg-gray-100">
-    <!-- Navigation -->
     <nav class="bg-white shadow-lg">
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center py-4">
-                <div class="flex items-center">
+                <div class="flex items-center space-x-2">
                     <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" 
-                         class="h-8 w-8 mr-2">
-                    <span class="text-xl font-bold text-gray-800">Office Lunch</span>
+                         class="h-8 w-8">
+                    <span class="text-xl font-bold text-gray-800">Lunch App</span>
                 </div>
-                <div class="flex items-center">
-                    <span class="text-gray-600 mr-4">Hi, <%= user.username %></span>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-600">Hi, <%= user.username %></span>
                     <a href="/logout" 
-                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all">
+                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 
+                              transition-all shadow-md">
                         Logout
                     </a>
                 </div>
@@ -27,54 +28,53 @@
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="max-w-4xl mx-auto py-12 px-4">
-        <div class="bg-white rounded-xl shadow-lg p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">Tomorrow's Meal Selection</h2>
+        <div class="bg-white rounded-2xl shadow-xl p-8 hover-scale">
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Tomorrow's Meal</h2>
             
-            <form action="/preference" method="post">
+            <form action="/preference" method="post" id="preference-form">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Vegetarian Option -->
+                    <!-- Vegetarian Card -->
                     <label class="cursor-pointer">
                         <input type="radio" name="preference" value="veg" 
                                class="hidden peer" <%= preference === 'veg' ? 'checked' : '' %>>
-                        <div class="p-6 border-2 rounded-xl peer-checked:border-green-500 
-                                  peer-checked:bg-green-50 hover:border-green-300 transition-all">
+                        <div class="p-6 border-2 rounded-2xl peer-checked:border-green-500 
+                                  peer-checked:bg-green-50 hover:border-green-300 transition-all h-full">
                             <div class="text-center">
                                 <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" 
-                                     class="w-16 h-16 mx-auto mb-4">
+                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
                                 <h3 class="text-xl font-semibold mb-2">Vegetarian</h3>
-                                <p class="text-gray-600">Fresh vegetables and plant-based proteins</p>
+                                <p class="text-gray-600 text-sm">Fresh plant-based meals</p>
                             </div>
                         </div>
                     </label>
 
-                    <!-- Chicken Option -->
+                    <!-- Chicken Card -->
                     <label class="cursor-pointer">
                         <input type="radio" name="preference" value="chicken" 
                                class="hidden peer" <%= preference === 'chicken' ? 'checked' : '' %>>
-                        <div class="p-6 border-2 rounded-xl peer-checked:border-orange-500 
-                                  peer-checked:bg-orange-50 hover:border-orange-300 transition-all">
+                        <div class="p-6 border-2 rounded-2xl peer-checked:border-orange-500 
+                                  peer-checked:bg-orange-50 hover:border-orange-300 transition-all h-full">
                             <div class="text-center">
                                 <img src="https://cdn-icons-png.flaticon.com/512/1046/1046771.png" 
-                                     class="w-16 h-16 mx-auto mb-4">
+                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
                                 <h3 class="text-xl font-semibold mb-2">Chicken</h3>
-                                <p class="text-gray-600">Grilled chicken with seasonal sides</p>
+                                <p class="text-gray-600 text-sm">Grilled poultry dishes</p>
                             </div>
                         </div>
                     </label>
 
-                    <!-- Fish Option -->
+                    <!-- Fish Card -->
                     <label class="cursor-pointer">
                         <input type="radio" name="preference" value="fish" 
                                class="hidden peer" <%= preference === 'fish' ? 'checked' : '' %>>
-                        <div class="p-6 border-2 rounded-xl peer-checked:border-blue-500 
-                                  peer-checked:bg-blue-50 hover:border-blue-300 transition-all">
+                        <div class="p-6 border-2 rounded-2xl peer-checked:border-blue-500 
+                                  peer-checked:bg-blue-50 hover:border-blue-300 transition-all h-full">
                             <div class="text-center">
                                 <img src="https://cdn-icons-png.flaticon.com/512/1046/1046769.png" 
-                                     class="w-16 h-16 mx-auto mb-4">
+                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
                                 <h3 class="text-xl font-semibold mb-2">Fish</h3>
-                                <p class="text-gray-600">Fresh seafood with lemon butter sauce</p>
+                                <p class="text-gray-600 text-sm">Fresh seafood selection</p>
                             </div>
                         </div>
                     </label>
@@ -82,13 +82,39 @@
 
                 <div class="mt-8 text-center">
                     <button type="submit" 
-                            class="bg-blue-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 
-                                   transition-all transform hover:scale-105">
-                        Save Preference
+                            class="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 
+                                   transition-all shadow-lg relative" id="submit-btn">
+                        <span class="when-enabled">Save Selection</span>
+                        <span class="when-loading hidden">
+                            <svg class="animate-spin h-5 w-5 text-white mx-auto" 
+                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                        </span>
                     </button>
                 </div>
             </form>
         </div>
     </div>
+
+    <% if (success) { %>
+        <div class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-xl 
+                    animate-fade-in flex items-center space-x-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <span>Preference saved successfully!</span>
+        </div>
+    <% } %>
+
+    <script>
+        document.getElementById('preference-form').addEventListener('submit', () => {
+            const btn = document.getElementById('submit-btn');
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            btn.querySelector('.when-enabled').classList.add('hidden');
+            btn.querySelector('.when-loading').classList.remove('hidden');
+        });
+    </script>
 </body>
 </html>

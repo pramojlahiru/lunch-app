@@ -8,17 +8,18 @@
 </head>
 <body class="bg-gradient-to-r from-purple-500 to-blue-600 min-h-screen">
     <div class="flex items-center justify-center min-h-screen">
-        <div class="bg-white p-8 rounded-lg shadow-2xl w-96">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 transform transition-all duration-300 hover:shadow-3xl">
             <div class="text-center mb-8">
                 <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" 
                      class="w-20 h-20 mx-auto mb-4 animate-bounce">
                 <h1 class="text-3xl font-bold text-gray-800">Office Lunch</h1>
-                <p class="text-gray-600">Choose your daily meal</p>
+                <p class="text-gray-600 mt-2">Your daily meal selection</p>
             </div>
 
             <% if (error) { %>
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-                    Invalid username or password
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 
+                            animate-fade-in">
+                    Invalid credentials
                 </div>
             <% } %>
 
@@ -26,17 +27,20 @@
                 <div class="mb-6">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
                     <input type="text" name="username" 
-                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                           required>
+                           class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 
+                                  focus:border-transparent transition-all"
+                           required autofocus>
                 </div>
                 <div class="mb-8">
                     <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
                     <input type="password" name="password" 
-                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           class="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 
+                                  focus:border-transparent transition-all"
                            required>
                 </div>
                 <button type="submit" 
-                        class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-all duration-300">
+                        class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 
+                               transition-all duration-300 font-semibold shadow-md">
                     Sign In
                 </button>
             </form>
