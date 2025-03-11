@@ -257,9 +257,22 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
          GROUP BY date, preference 
          ORDER BY date DESC`,
         (err, rows) => err ? reject(err) : resolve(rows)
-      );
-    });
-    res.render('admin', { preferences });
+        )});
+
+    // Group by date
+    const groupedData = preferences.reduce((acc, item) => {
+      if (!acc[item.date]) {
+        acc[item.date] = {
+          total: 0,
+          details: []
+        };
+      }
+      acc[item.date].total += item.count;
+      acc[item.date].details.push(item);
+      return acc;
+    }, {});
+
+    res.render('admin', { groupedData: Object.entries(groupedData) });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

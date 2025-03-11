@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .rotate-180 {
+            transform: rotate(180deg);
+            transition: transform 0.3s ease;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
     <nav class="bg-white shadow-lg">
@@ -14,10 +19,9 @@
                 <div class="flex items-center space-x-2">
                     <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" 
                          class="h-8 w-8">
-                    <span class="text-xl font-bold text-gray-800">Lunch App</span>
+                    <span class="text-xl font-bold text-gray-800">Lunch App Admin Dashboard</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-gray-600">Admin Dashboard</span>
                     <a href="/logout" 
                        class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 
                               transition-all shadow-md">
@@ -29,65 +33,59 @@
     </nav>
 
     <div class="max-w-6xl mx-auto py-12 px-4">
-        <div class="bg-white rounded-2xl shadow-xl p-8 hover-scale">
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800">Meal Preferences</h2>
-                <div class="flex gap-4 items-center">
-                    <input type="date" class="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500" 
-                           id="dateFilter">
-                    <button onclick="filterTable()" 
-                            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
-                                   transition-all shadow-md">
-                        Filter
-                    </button>
-                </div>
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">Meal Preferences Report</h2>
+            
+            <div class="space-y-4">
+                <% groupedData.forEach(function([date, data]) { %>
+                    <div class="border rounded-lg overflow-hidden">
+                        <div class="bg-gray-50 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+                            onclick="toggleDetails('<%= date %>')">
+                            <div class="flex items-center gap-4">
+                                <span class="text-gray-600"><%= date %></span>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                    Total: <%= data.total %>
+                                </span>
+                            </div>
+                            <svg id="icon-<%= date %>" class="w-6 h-6 text-gray-600 transform transition-transform" 
+                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        
+                        <div id="details-<%= date %>" class="hidden bg-gray-50 p-4 border-t">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <% data.details.forEach(function(pref) { %>
+                                    <div class="bg-white p-4 rounded-lg shadow-sm">
+                                        <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium capitalize"><%= pref.preference %></span>
+                                            <span class="text-gray-600"><%= pref.count %></span>
+                                        </div>
+                                        <div class="h-2 bg-gray-200 rounded-full">
+                                            <div class="h-full 
+                                                <% if (pref.preference === 'veg') { %>bg-green-500<% } %>
+                                                <% if (pref.preference === 'chicken') { %>bg-orange-500<% } %>
+                                                <% if (pref.preference === 'fish') { %>bg-blue-500<% } %>
+                                                rounded-full" 
+                                                style="width: <%= (pref.count / data.total * 100).toFixed(0) %>%">
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
             </div>
-
-            <% if (preferences.length === 0) { %>
-                <div class="text-center py-12">
-                    <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" 
-                         class="w-32 h-32 mx-auto mb-4 opacity-40">
-                    <p class="text-gray-500 text-lg">No preferences recorded yet</p>
-                </div>
-            <% } else { %>
-                <div class="overflow-x-auto rounded-xl shadow-inner">
-                    <table class="w-full">
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Date</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Meal Type</th>
-                                <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Count</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white">
-                            <% preferences.forEach(p => { %>
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 whitespace-nowrap font-medium"><%= p.date %></td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="px-3 py-1.5 rounded-full text-sm font-medium 
-                                        <%= p.preference === 'veg' ? 'bg-green-100 text-green-800' : '' %>
-                                        <%= p.preference === 'chicken' ? 'bg-orange-100 text-orange-800' : '' %>
-                                        <%= p.preference === 'fish' ? 'bg-blue-100 text-blue-800' : '' %>">
-                                        <%= p.preference.charAt(0).toUpperCase() + p.preference.slice(1) %>
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap"><%= p.count %></td>
-                            </tr>
-                            <% }) %>
-                        </tbody>
-                    </table>
-                </div>
-            <% } %>
         </div>
     </div>
 
     <script>
-        function filterTable() {
-            const filterDate = document.getElementById('dateFilter').value;
-            document.querySelectorAll('tbody tr').forEach(row => {
-                const rowDate = row.cells[0].textContent.split('T')[0];
-                row.style.display = rowDate.includes(filterDate) ? '' : 'none';
-            });
+        function toggleDetails(date) {
+            const details = document.getElementById(`details-${date}`);
+            const icon = document.getElementById(`icon-${date}`);
+            details.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
         }
     </script>
 </body>
