@@ -7,12 +7,16 @@
     animation: fadeIn 0.3s ease-out;
 }
 
-.hover-scale {
+.hover-scale, .hover-scale-icon {
     transition: transform 0.3s ease;
 }
 
 .hover-scale:hover {
     transform: scale(1.01);
+}
+
+.hover-scale-icon:hover {
+    transform: scale(1.1);
 }
 
 .animate-pulse {
@@ -41,8 +45,11 @@ input[type="date"]:invalid {
     border-width: 3px;
   }
 
-  /* Primary Colors */
---kaleris-navy: #1A2B3C;       /* Dark blue */
---kaleris-teal: #00C1D4;       /* Bright teal */
---kaleris-blue: #3A6B8E;       /* Medium blue */
---kaleris-gray: #F5F7FA;       /* Light gray */
+.admin-icon {
+    transition: all 0.3s ease;
+}
+
+.admin-icon:hover {
+    transform: scale(1.1);
+    color: #4EAD68;
+}

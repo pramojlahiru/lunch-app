@@ -12,14 +12,28 @@
         <div class="max-w-6xl mx-auto px-4">
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-2">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" 
-                         class="h-8 w-8">
-                    <span class="text-xl font-bold text-gray-800">Lunch App</span>
+<!--                    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" -->
+<!--                         class="h-8 w-8">-->
+                    <img src="/fried-rice-outlined.png" class="h-8 w-8">
+                    <span class="text-xl font-bold text-gray-800">Lunch Selection Portal</span>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span class="text-gray-600">Hi, <%= user.displayName %></span>
-                    <a href="/logout" 
-                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 
+                    <span class="text-gray-600">
+                        <span id="greeting"></span>, <%= user.displayName %>
+                    </span>
+                    <% if (user.role === 'admin') { %>
+                        <a href="/admin"
+                           class="text-gray-600 hover:text-[#4EAD68] transition-colors"
+                           title="Admin Dashboard">
+<!--                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
+<!--                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"-->
+<!--                                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>-->
+<!--                            </svg>-->
+                            <img src="/admin-dashboard.png" class="h-8 w-8 hover-scale-icon">
+                        </a>
+                    <% } %>
+                    <a href="/logout"
+                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
                               transition-all shadow-md">
                         Logout
                     </a>
@@ -30,7 +44,7 @@
 
     <div class="max-w-4xl mx-auto py-12 px-4">
         <div class="bg-white rounded-2xl shadow-xl p-8 hover-scale">
-            <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Your Meal</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Your Preference</h2>
             
             <form action="/preference" method="post" id="preference-form">
                 <!-- Date Picker -->
@@ -50,10 +64,11 @@
                         <div class="p-6 border-2 rounded-2xl peer-checked:border-green-500 
                                   peer-checked:bg-green-50 hover:border-green-300 transition-all h-full">
                             <div class="text-center">
-                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" 
-                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
-                                <h3 class="text-xl font-semibold mb-2">Vegetarian</h3>
-                                <p class="text-gray-600 text-sm">Fresh plant-based meals</p>
+<!--                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" -->
+<!--                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">-->
+                                <img src="/salad.png" class="w-16 h-16 mx-auto mb-4 animate-pulse">
+                                <h3 class="text-xl font-semibold mb-2">Veg</h3>
+                                <p class="text-gray-600 text-sm">Vegetable Rice</p>
                             </div>
                         </div>
                     </label>
@@ -65,10 +80,11 @@
                         <div class="p-6 border-2 rounded-2xl peer-checked:border-orange-500 
                                   peer-checked:bg-orange-50 hover:border-orange-300 transition-all h-full">
                             <div class="text-center">
-                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046771.png" 
-                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
+<!--                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046771.png" -->
+<!--                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">-->
+                                <img src="/chicken.png" class="w-16 h-16 mx-auto mb-4 animate-pulse">
                                 <h3 class="text-xl font-semibold mb-2">Chicken</h3>
-                                <p class="text-gray-600 text-sm">Grilled poultry dishes</p>
+                                <p class="text-gray-600 text-sm">Chicken Rice</p>
                             </div>
                         </div>
                     </label>
@@ -80,10 +96,11 @@
                         <div class="p-6 border-2 rounded-2xl peer-checked:border-blue-500 
                                   peer-checked:bg-blue-50 hover:border-blue-300 transition-all h-full">
                             <div class="text-center">
-                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046769.png" 
-                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
+<!--                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046769.png" -->
+<!--                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">-->
+                                <img src="/fish.png" class="w-16 h-16 mx-auto mb-4 animate-pulse">
                                 <h3 class="text-xl font-semibold mb-2">Fish</h3>
-                                <p class="text-gray-600 text-sm">Fresh seafood selection</p>
+                                <p class="text-gray-600 text-sm">Fish Rice</p>
                             </div>
                         </div>
                     </label>
@@ -178,6 +195,23 @@
             btn.querySelector('.when-enabled').classList.add('hidden');
             btn.querySelector('.when-loading').classList.remove('hidden');
         });
+
+        function updateGreeting() {
+            const hour = new Date().getHours();
+            const greeting = document.getElementById('greeting');
+
+            if (hour < 12) {
+                greeting.textContent = 'Good morning';
+            } else if (hour < 18) {
+                greeting.textContent = 'Good afternoon';
+            } else {
+                greeting.textContent = 'Good evening';
+            }
+        }
+
+        // Run on page load and every minute to stay accurate
+        updateGreeting();
+        setInterval(updateGreeting, 60000);
     </script>
 </body>
 </html>

@@ -12,7 +12,7 @@ const app = express();
 
 // Middleware
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public'));
+app.use(express.static('resources'));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'super-secret-key',
   resave: false,
@@ -252,12 +252,16 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const preferences = await new Promise((resolve, reject) => {
       db.all(
-        `SELECT date, preference, COUNT(*) as count 
-         FROM lunch_preferences 
-         GROUP BY date, preference 
-         ORDER BY date DESC`,
-        (err, rows) => err ? reject(err) : resolve(rows)
-        )});
+          `SELECT lp.date, lp.preference, 
+          COUNT(*) as count,
+          GROUP_CONCAT(u.display_name) as display_names
+           FROM lunch_preferences lp
+           JOIN users u ON u.id = lp.user_id
+           GROUP BY lp.date, lp.preference 
+           ORDER BY lp.date DESC`,
+          (err, rows) => err ? reject(err) : resolve(rows)
+      );
+    });
 
     // Group by date
     const groupedData = preferences.reduce((acc, item) => {
@@ -272,7 +276,10 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
       return acc;
     }, {});
 
-    res.render('admin', { groupedData: Object.entries(groupedData) });
+    res.render('admin', {
+      user: req.user,
+      groupedData: Object.entries(groupedData)
+    });
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');

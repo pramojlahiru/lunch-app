@@ -6,86 +6,75 @@
     <title>Lunch App - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary-green: rgb(78, 173, 104);
-            --dark-green: rgb(62, 141, 82);
-            --navy: rgb(26, 43, 60);
+        body {
+            background: linear-gradient(135deg, #fefffe 0%, #4EAD68 100%);
+            min-height: 100vh;
         }
-        
-        .brand-gradient {
-            background: linear-gradient(135deg, var(--navy) 0%, rgba(26,43,60,0.9) 100%);
-        }
-        
         .brand-focus:focus {
             box-shadow: 0 0 0 3px rgba(78, 173, 104, 0.3);
-            border-color: var(--primary-green);
         }
     </style>
 </head>
-<body class="brand-gradient min-h-screen">
-    <div class="flex items-center justify-center min-h-screen">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 transform transition-all duration-300 hover:shadow-3xl border-t-4 border-[rgb(78,173,104)]">
-            <div class="text-center mb-8">
-                <div class="mb-4 flex justify-center">
-                    <div class="bg-[rgb(26,43,60)] p-3 rounded-full">
-                        <svg class="w-12 h-12 text-[rgb(78,173,104)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                        </svg>
-                    </div>
-                </div>
-                <h1 class="text-2xl font-bold text-[rgb(26,43,60)]">Meal Selection Portal</h1>
-                <p class="text-[rgb(78,173,104)] mt-2 text-sm">For Kaleris Sri Lanka Users</p>
+<body>
+<div class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 transform transition-all duration-300 hover:shadow-3xl">
+        <div class="text-center mb-8">
+            <div class="mb-4 flex justify-center">
+<!--                <img src="https://cdn-icons-png.flaticon.com/512/5787/5787078.png" class="w-32 h-32 animate-bounce">-->
+                <img src="/fried-rice-outlined.png" class="w-32 h-32 animate-bounce">
+<!--                <img src="/meal-app-icon.jpeg" class="w-32 h-32">-->
             </div>
+<!--            <h1 class="text-2xl font-bold text-gray-800">Daily Meal Selection</h1>-->
+            <h1 class="text-2xl font-bold text-gray-800">Lunch Selection Portal</h1>
+<!--            <p class="text-gray-600 mt-2">Choose your lunch preference</p>-->
+            <p class="text-[rgb(78,173,104)] mt-2">For Kaleris SL Staff</p>
+        </div>
 
-            <% if (error) { %>
-                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 animate-fade-in">
-                    Invalid credentials
-                </div>
-            <% } %>
+        <% if (error) { %>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4 animate-fade-in">
+                Invalid credentials
+            </div>
+        <% } %>
 
-            <!-- Local Login Form -->
-            <form action="/login" method="post" class="mb-6">
-                <div class="mb-6">
-                    <label class="block text-[rgb(26,43,60)] text-sm font-semibold mb-2">Username</label>
-                    <input type="text" name="username" 
-                           class="w-full px-4 py-3 border-2 border-[rgb(78,173,104)] rounded-lg 
-                                  brand-focus focus:ring-2 focus:ring-[rgb(78,173,104)] transition-all"
-                           required autofocus>
-                </div>
-                <div class="mb-6">
-                    <label class="block text-[rgb(26,43,60)] text-sm font-semibold mb-2">Password</label>
-                    <input type="password" name="password" 
-                           class="w-full px-4 py-3 border-2 border-[rgb(78,173,104)] rounded-lg 
-                                  brand-focus focus:ring-2 focus:ring-[rgb(78,173,104)] transition-all"
-                           required>
-                </div>
-                <button type="submit" 
-                        class="w-full bg-[rgb(78,173,104)] text-white py-3 rounded-lg 
-                               hover:bg-[rgb(62,141,82)] transition-all duration-300 font-semibold 
-                               shadow-md focus:outline-none focus:ring-2 focus:ring-[rgb(78,173,104)]">
-                    Sign In
-                </button>
-            </form>
+        <form action="/login" method="post">
+            <div class="mb-6">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Username</label>
+                <input type="text" name="username"
+                       class="w-full px-4 py-3 border-2 border-green-500 rounded-lg
+                                  brand-focus focus:ring-2 focus:ring-green-500 transition-all"
+                       required autofocus>
+            </div>
+            <div class="mb-8">
+                <label class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                <input type="password" name="password"
+                       class="w-full px-4 py-3 border-2 border-green-500 rounded-lg
+                                  brand-focus focus:ring-2 focus:ring-green-500 transition-all"
+                       required>
+            </div>
+            <button type="submit"
+                    class="w-full bg-green-500 text-white py-3 rounded-lg hover:bg-green-600
+                               transition-all duration-300 font-semibold shadow-md">
+                Sign In
+            </button>
+        </form>
 
-            <!-- Separator -->
-            <div class="flex items-center mb-6">
+        <div class="mt-6">
+            <div class="flex items-center my-6">
                 <div class="flex-1 border-t border-gray-300"></div>
                 <span class="px-4 text-gray-500 text-sm">OR</span>
                 <div class="flex-1 border-t border-gray-300"></div>
             </div>
 
-            <!-- Google Login Button -->
-            <div class="mt-4">
-                <a href="/auth/google" 
-                   class="w-full bg-[#4285F4] text-white py-3 rounded-lg hover:bg-[#357ABD] 
+            <a href="/auth/google"
+               class="w-full bg-[#4285F4] text-white py-3 rounded-lg hover:bg-[#357ABD]
                           transition-all flex items-center justify-center gap-2 shadow-md">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-                        <path fill="#fff" d="M17.6 9.2c0-.6-.1-1.3-.3-1.8H9v3.4h4.8c-.2 1.1-1.2 3-4.8 3-2.9 0-5.3-2.4-5.3-5.3S6.1 3 9 3c1.6 0 2.8.7 3.5 1.3l2.4-2.4C13.5.8 11.4 0 9 0 4 0 0 4 0 9s4 9 9 9c5.2 0 8.6-3.6 8.6-8.8z"/>
-                    </svg>
-                    Continue with Google
-                </a>
-            </div>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+                    <path fill="#fff" d="M17.6 9.2c0-.6-.1-1.3-.3-1.8H9v3.4h4.8c-.2 1.1-1.2 3-4.8 3-2.9 0-5.3-2.4-5.3-5.3S6.1 3 9 3c1.6 0 2.8.7 3.5 1.3l2.4-2.4C13.5.8 11.4 0 9 0 4 0 0 4 0 9s4 9 9 9c5.2 0 8.6-3.6 8.6-8.8z"/>
+                </svg>
+                Continue with Google
+            </a>
         </div>
     </div>
+</div>
 </body>
 </html>

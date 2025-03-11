@@ -10,83 +10,164 @@
             transform: rotate(180deg);
             transition: transform 0.3s ease;
         }
+        .preference-card {
+            position: relative;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .preference-card:hover {
+            transform: translateY(-3px);
+        }
+        .preference-card .tooltiptext {
+            visibility: hidden;
+            width: 240px;
+            background-color: rgba(0,0,0,0.95);
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            padding: 12px;
+            position: absolute;
+            z-index: 1000;
+            bottom: calc(100% + 10px);
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 14px;
+            line-height: 1.4;
+            pointer-events: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .preference-card:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .preference-card .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(0,0,0,0.95) transparent transparent transparent;
+        }
     </style>
+    <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-2">
-                    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" 
-                         class="h-8 w-8">
-                    <span class="text-xl font-bold text-gray-800">Lunch App Admin Dashboard</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/logout" 
-                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 
-                              transition-all shadow-md">
-                        Logout
-                    </a>
-                </div>
+<nav class="bg-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center space-x-2">
+                <img src="/fried-rice-outlined.png" class="h-8 w-8">
+                <span class="text-xl font-bold text-gray-800">Admin Dashboard</span>
             </div>
-        </div>
-    </nav>
-
-    <div class="max-w-6xl mx-auto py-12 px-4">
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-8">Meal Preferences Report</h2>
-            
-            <div class="space-y-4">
-                <% groupedData.forEach(function([date, data]) { %>
-                    <div class="border rounded-lg overflow-hidden">
-                        <div class="bg-gray-50 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
-                            onclick="toggleDetails('<%= date %>')">
-                            <div class="flex items-center gap-4">
-                                <span class="text-gray-600"><%= date %></span>
-                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                    Total: <%= data.total %>
-                                </span>
-                            </div>
-                            <svg id="icon-<%= date %>" class="w-6 h-6 text-gray-600 transform transition-transform" 
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </div>
-                        
-                        <div id="details-<%= date %>" class="hidden bg-gray-50 p-4 border-t">
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <% data.details.forEach(function(pref) { %>
-                                    <div class="bg-white p-4 rounded-lg shadow-sm">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span class="font-medium capitalize"><%= pref.preference %></span>
-                                            <span class="text-gray-600"><%= pref.count %></span>
-                                        </div>
-                                        <div class="h-2 bg-gray-200 rounded-full">
-                                            <div class="h-full 
-                                                <% if (pref.preference === 'veg') { %>bg-green-500<% } %>
-                                                <% if (pref.preference === 'chicken') { %>bg-orange-500<% } %>
-                                                <% if (pref.preference === 'fish') { %>bg-blue-500<% } %>
-                                                rounded-full" 
-                                                style="width: <%= (pref.count / data.total * 100).toFixed(0) %>%">
-                                            </div>
-                                        </div>
-                                    </div>
-                                <% }); %>
-                            </div>
-                        </div>
-                    </div>
-                <% }); %>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-600">
+                    <span id="greeting"></span>, <%= user.displayName %>
+                </span>
+                <a href="/home"
+                   class="text-gray-600 hover:text-[#4EAD68] transition-colors"
+                   title="Home">
+                    <img src="/home.png" class="h-8 w-8 hover-scale-icon">
+                </a>
+                <a href="/logout"
+                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
+                              transition-all shadow-md">
+                    Logout
+                </a>
             </div>
         </div>
     </div>
+</nav>
 
-    <script>
-        function toggleDetails(date) {
-            const details = document.getElementById(`details-${date}`);
-            const icon = document.getElementById(`icon-${date}`);
-            details.classList.toggle('hidden');
-            icon.classList.toggle('rotate-180');
+<div class="max-w-6xl mx-auto py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-8">Meal Preferences Report</h2>
+
+        <div class="space-y-4">
+            <%
+            const today = new Date().toISOString().split('T')[0];
+            groupedData.forEach(function([date, data]) { %>
+                <div class="border rounded-lg">
+                    <div class="bg-gray-50 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+                         onclick="toggleDetails('<%= date %>')">
+                        <div class="flex items-center gap-4">
+                            <span class="text-gray-600"><%= date %></span>
+                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                                    Total: <%= data.total %>
+                                </span>
+                        </div>
+                        <svg id="icon-<%= date %>" class="w-6 h-6 text-gray-600 transform transition-transform <%= date === today ? 'rotate-180' : '' %>"
+                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </div>
+
+                    <div id="details-<%= date %>" class="<%= date === today ? '' : 'hidden' %> bg-gray-50 p-4 border-t">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <% data.details.forEach(function(pref) { %>
+                                <div class="preference-card bg-white p-4 rounded-lg shadow-sm">
+                                    <% if (pref.display_names) { %>
+                                        <span class="tooltiptext">
+                                                <div class="max-h-40 overflow-y-auto text-sm">
+                                                    <% pref.display_names.split(',').forEach(function(displayName) { %>
+                                                        <div class="py-1.5 px-2 hover:bg-white/10 rounded">
+                                                            <%= displayName.trim() %>
+                                                        </div>
+                                                    <% }); %>
+                                                </div>
+                                            </span>
+                                    <% } %>
+                                    <div class="flex items-center justify-between mb-2">
+                                            <span class="font-medium capitalize">
+                                                <%= pref.preference %>
+                                            </span>
+                                        <span class="text-gray-600"><%= pref.count %></span>
+                                    </div>
+                                    <div class="h-2 bg-gray-200 rounded-full">
+                                        <div class="h-full
+                                                <% if (pref.preference === 'veg') { %>bg-green-500<% } %>
+                                                <% if (pref.preference === 'chicken') { %>bg-orange-500<% } %>
+                                                <% if (pref.preference === 'fish') { %>bg-blue-500<% } %>
+                                                rounded-full"
+                                             style="width: <%= (pref.count / data.total * 100).toFixed(0) %>%">
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+            <% }); %>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleDetails(date) {
+        const details = document.getElementById(`details-${date}`);
+        const icon = document.getElementById(`icon-${date}`);
+        details.classList.toggle('hidden');
+        icon.classList.toggle('rotate-180');
+    }
+    function updateGreeting() {
+        const hour = new Date().getHours();
+        const greeting = document.getElementById('greeting');
+
+        if (hour < 12) {
+            greeting.textContent = 'Good Morning';
+        } else if (hour < 18) {
+            greeting.textContent = 'Good Afternoon';
+        } else {
+            greeting.textContent = 'Good Evening';
         }
-    </script>
+    }
+
+    // Run on page load and every minute to stay accurate
+    updateGreeting();
+    setInterval(updateGreeting, 60000);
+</script>
 </body>
 </html>
