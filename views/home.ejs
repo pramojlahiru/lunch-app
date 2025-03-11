@@ -30,14 +30,23 @@
 
     <div class="max-w-4xl mx-auto py-12 px-4">
         <div class="bg-white rounded-2xl shadow-xl p-8 hover-scale">
-            <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Tomorrow's Meal</h2>
+            <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Your Meal</h2>
             
             <form action="/preference" method="post" id="preference-form">
+                <!-- Date Picker -->
+                <div class="mb-8">
+                    <label class="block text-gray-700 text-sm font-semibold mb-2">Select Date</label>
+                    <input type="date" id="datePicker" name="date" 
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                           required>
+                </div>
+
+                <!-- Meal Options -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <!-- Vegetarian Card -->
                     <label class="cursor-pointer">
                         <input type="radio" name="preference" value="veg" 
-                               class="hidden peer" <%= preference === 'veg' ? 'checked' : '' %>>
+                               class="hidden peer">
                         <div class="p-6 border-2 rounded-2xl peer-checked:border-green-500 
                                   peer-checked:bg-green-50 hover:border-green-300 transition-all h-full">
                             <div class="text-center">
@@ -52,7 +61,7 @@
                     <!-- Chicken Card -->
                     <label class="cursor-pointer">
                         <input type="radio" name="preference" value="chicken" 
-                               class="hidden peer" <%= preference === 'chicken' ? 'checked' : '' %>>
+                               class="hidden peer">
                         <div class="p-6 border-2 rounded-2xl peer-checked:border-orange-500 
                                   peer-checked:bg-orange-50 hover:border-orange-300 transition-all h-full">
                             <div class="text-center">
@@ -67,7 +76,7 @@
                     <!-- Fish Card -->
                     <label class="cursor-pointer">
                         <input type="radio" name="preference" value="fish" 
-                               class="hidden peer" <%= preference === 'fish' ? 'checked' : '' %>>
+                               class="hidden peer">
                         <div class="p-6 border-2 rounded-2xl peer-checked:border-blue-500 
                                   peer-checked:bg-blue-50 hover:border-blue-300 transition-all h-full">
                             <div class="text-center">
@@ -109,6 +118,60 @@
     <% } %>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const datePicker = document.getElementById('datePicker');
+            const preferences = <%- JSON.stringify(preferences) %>;
+
+            // IST time calculation
+            const now = new Date();
+            const istOffset = 330; // minutes
+            const istTime = new Date(now.getTime() + (istOffset - now.getTimezoneOffset()) * 60000);
+            
+            // Date constraints
+            const today = new Date(istTime);
+            today.setHours(0,0,0,0);
+            
+            const tomorrow = new Date(today);
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            const dayAfter = new Date(today);
+            dayAfter.setDate(dayAfter.getDate() + 2);
+
+            // Set min/max dates
+            let minDate = today;
+            if (istTime.getHours() >= 10) { // After 10 AM IST
+                minDate = tomorrow;
+            }
+            
+            datePicker.min = formatDate(minDate);
+            datePicker.max = formatDate(dayAfter);
+
+            // Disable weekends
+            datePicker.addEventListener('input', function() {
+                const selectedDate = new Date(this.value);
+                const day = selectedDate.getDay();
+                
+                if (day === 0 || day === 6) {
+                    this.setCustomValidity('Weekends are not allowed');
+                } else {
+                    this.setCustomValidity('');
+                }
+            });
+
+            // Preselect existing preference
+            datePicker.addEventListener('change', function() {
+                const selectedDate = this.value;
+                const preference = preferences[selectedDate];
+                if (preference) {
+                    document.querySelector(`input[value="${preference}"]`).checked = true;
+                }
+            });
+
+            function formatDate(date) {
+                return date.toISOString().split('T')[0];
+            }
+        });
+
         document.getElementById('preference-form').addEventListener('submit', () => {
             const btn = document.getElementById('submit-btn');
             btn.classList.add('opacity-75', 'cursor-not-allowed');

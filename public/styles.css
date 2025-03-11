@@ -23,3 +23,26 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.5; }
 }
+
+/* Date Validation Styles */
+input[type="date"]:invalid {
+    border-color: #f87171;
+    box-shadow: 0 0 0 2px #fecaca;
+  }
+  
+  input[type="date"]:valid {
+    border-color: #34d399;
+    box-shadow: 0 0 0 2px #a7f3d0;
+  }
+  
+  /* Preference Cards */
+  input:checked + div {
+    transform: scale(1.02);
+    border-width: 3px;
+  }
+
+  /* Primary Colors */
+--kaleris-navy: #1A2B3C;       /* Dark blue */
+--kaleris-teal: #00C1D4;       /* Bright teal */
+--kaleris-blue: #3A6B8E;       /* Medium blue */
+--kaleris-gray: #F5F7FA;       /* Light gray */
