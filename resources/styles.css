@@ -53,3 +53,87 @@ input[type="date"]:invalid {
     transform: scale(1.1);
     color: #4EAD68;
 }
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/*input[name="preference"]:invalid ~ div {*/
+/*    border-color: #f87171;*/
+/*    background-color: #fef2f2;*/
+/*}*/
+
+form:invalid button[type="submit"] {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Custom Toastify Styles */
+.Toastify__toast {
+    border-radius: 12px !important;
+    padding: 16px 24px !important;
+    margin: 8px !important;
+}
+
+.Toastify__toast-body {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+}
+
+.Toastify__toast--success {
+    background: #4CAF50 !important;
+    background-color: #4CAF50 !important;
+}
+
+.Toastify__toast--error {
+    background: #EF4444 !important;
+    background-color: #EF4444 !important;
+}
+
+.Toastify__toast-container .Toastify__toast {
+    border-radius: 12px !important;
+}
+
+/* Date picker required state */
+#datePicker:invalid {
+    border-color: #EF4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
+}
+
+#datePicker:valid {
+    border-color: #4CAF50;
+    box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+}
+
+/* Toastify Close Button Styles */
+.Toastify__close-button {
+    color: white !important;
+    opacity: 0.8 !important;
+    align-self: center !important;
+}
+
+.Toastify__close-button:hover {
+    opacity: 1 !important;
+}
+
+.Toastify__close-button > svg {
+    height: 16px !important;
+    width: 16px !important;
+}
+
+/* Date picker error state */
+.date-picker-error {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+/* Focus state override */
+.date-picker-error:focus {
+    border-color: #EF4444 !important;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
+}

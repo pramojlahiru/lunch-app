@@ -7,6 +7,8 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcrypt');
 const sqlite3 = require('sqlite3').verbose();
 const db = new sqlite3.Database('database.sqlite');
+const rateLimit = require('express-rate-limit');
+const { Parser } = require('json2csv');
 
 const app = express();
 
@@ -24,6 +26,14 @@ app.use(passport.session());
 
 // EJS setup
 app.set('view engine', 'ejs');
+
+// Rate limiting for login route
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  message: 'Too many login attempts, please try again later.'
+});
+app.use('/login', limiter);
 
 // Passport configuration
 passport.use(new LocalStrategy(
@@ -177,23 +187,26 @@ app.get('/logout', (req, res, next) => {
 
 app.get('/home', ensureAuthenticated, async (req, res) => {
   try {
+    // Get all user preferences
     const preferences = await new Promise((resolve, reject) => {
       db.all(
-        'SELECT date, preference FROM lunch_preferences WHERE user_id = ?',
-        [req.user.id],
-        (err, rows) => err ? reject(err) : resolve(rows)
+          'SELECT date, preference FROM lunch_preferences WHERE user_id = ?',
+          [req.user.id],
+          (err, rows) => err ? reject(err) : resolve(rows)
       );
     });
 
+    // Create lookup object { date: preference }
     const preferencesMap = preferences.reduce((acc, p) => {
       acc[p.date] = p.preference;
       return acc;
     }, {});
 
-    res.render('home', { 
+    res.render('home', {
       user: req.user,
       preferences: preferencesMap,
-      success: req.query.success 
+      success: req.query.success,
+      isEdit: req.query.edit
     });
   } catch (err) {
     console.error(err);
@@ -204,47 +217,53 @@ app.get('/home', ensureAuthenticated, async (req, res) => {
 app.post('/preference', ensureAuthenticated, async (req, res) => {
   try {
     const { preference, date } = req.body;
-    
+
+    // Mandatory date check
+    if (!date) {
+      return res.status(400).json({ error: 'Date selection is required' });
+    }
+    const isEdit = await checkExistingPreference(req.user.id, date);
+
     // Server-side validation
     const selectedDate = new Date(date);
     const now = new Date();
-    const istOffset = 330 * 60 * 1000; // IST offset in milliseconds
-    const istTime = new Date(now.getTime() + istOffset);
-    
-    // Date constraints
-    const todayIST = new Date(istTime);
-    todayIST.setHours(0,0,0,0);
-    
-    let minDate = new Date(todayIST);
-    if (istTime.getHours() >= 10) { // After 10 AM IST
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    let minDate = new Date(today);
+    if (now.getHours() >= 10) { // After 10 AM local time
       minDate.setDate(minDate.getDate() + 1);
     }
-    
+
     const maxDate = new Date(minDate);
     maxDate.setDate(maxDate.getDate() + 2);
-    
+
+    const selectedDateUpper = new Date(selectedDate);
+    selectedDateUpper.setHours(0, 0, 0, 0);
+
     // Validate date range
-    if (selectedDate < minDate || selectedDate > maxDate) {
-      return res.status(400).send('Invalid date selection');
+    if (selectedDate < minDate || selectedDateUpper > maxDate) {
+      return res.status(400).json({ error: 'Invalid date selection' });
     }
-    
+
     // Validate weekends
     const day = selectedDate.getDay();
     if (day === 0 || day === 6) {
-      return res.status(400).send('Weekends are not allowed');
+      return res.status(400).json({ error: 'Weekends are not allowed' });
     }
 
     await new Promise((resolve, reject) => {
       db.run(
-        'INSERT OR REPLACE INTO lunch_preferences (user_id, preference, date) VALUES (?, ?, ?)',
-        [req.user.id, preference, date],
-        (err) => err ? reject(err) : resolve()
+          'INSERT OR REPLACE INTO lunch_preferences (user_id, preference, date) VALUES (?, ?, ?)',
+          [req.user.id, preference, date],
+          (err) => err ? reject(err) : resolve()
       );
     });
-    res.redirect('/home?success=1');
+
+    res.json({ message: isEdit ? 'Preference updated successfully!' : 'Preference saved successfully!' });
   } catch (err) {
     console.error(err);
-    res.redirect('/home');
+    res.status(500).json({ error: 'Server Error' });
   }
 });
 
@@ -286,6 +305,29 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
   }
 });
 
+app.get('/export-preferences', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const preferences = await new Promise((resolve, reject) => {
+      db.all(
+          `SELECT lp.date, lp.preference, u.display_name 
+                 FROM lunch_preferences lp
+                 JOIN users u ON u.id = lp.user_id`,
+          (err, rows) => err ? reject(err) : resolve(rows))
+    });
+
+    const fields = ['date', 'preference', 'display_name'];
+    const parser = new Parser({ fields });
+    const csv = parser.parse(preferences);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment('preferences.csv');
+    res.send(csv);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
 // Google Login Route
 app.get('/auth/google',
   passport.authenticate('google', {
@@ -311,6 +353,20 @@ function ensureAdmin(req, res, next) {
   if (req.user?.role === 'admin') return next();
   res.status(403).send('Forbidden');
 }
+
+async function checkExistingPreference(userId, date) {
+  const existing = await db.get(
+      'SELECT 1 FROM lunch_preferences WHERE user_id = ? AND date = ?',
+      [userId, date]
+  );
+  return !!existing;
+}
+
+// Centralized error handling
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

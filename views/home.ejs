@@ -5,213 +5,257 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Choose Your Meal</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body class="bg-gray-100">
-    <nav class="bg-white shadow-lg">
-        <div class="max-w-6xl mx-auto px-4">
-            <div class="flex justify-between items-center py-4">
-                <div class="flex items-center space-x-2">
-<!--                    <img src="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" -->
-<!--                         class="h-8 w-8">-->
-                    <img src="/fried-rice-outlined.png" class="h-8 w-8">
-                    <span class="text-xl font-bold text-gray-800">Lunch Selection Portal</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-600">
-                        <span id="greeting"></span>, <%= user.displayName %>
-                    </span>
-                    <% if (user.role === 'admin') { %>
-                        <a href="/admin"
-                           class="text-gray-600 hover:text-[#4EAD68] transition-colors"
-                           title="Admin Dashboard">
-<!--                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">-->
-<!--                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"-->
-<!--                                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>-->
-<!--                            </svg>-->
-                            <img src="/admin-dashboard.png" class="h-8 w-8 hover-scale-icon">
-                        </a>
-                    <% } %>
-                    <a href="/logout"
-                       class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
-                              transition-all shadow-md">
-                        Logout
+<nav class="bg-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center space-x-2">
+                <img src="/fried-rice-outlined.png" class="h-8 w-8" alt="Lunch App Logo">
+                <span class="text-xl font-bold text-gray-800">Lunch Selection Portal</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-600">
+                    <span id="greeting"></span>, <%= user.displayName %>
+                </span>
+                <% if (user.role === 'admin') { %>
+                    <a href="/admin"
+                       class="text-gray-600 hover:text-[#4EAD68] transition-colors"
+                       title="Admin Dashboard">
+                        <img src="/admin-dashboard.png" class="h-8 w-8 hover-scale-icon" alt="Admin Dashboard">
                     </a>
-                </div>
+                <% } %>
+                <a href="/logout"
+                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
+                              transition-all shadow-md">
+                    Logout
+                </a>
             </div>
         </div>
-    </nav>
-
-    <div class="max-w-4xl mx-auto py-12 px-4">
-        <div class="bg-white rounded-2xl shadow-xl p-8 hover-scale">
-            <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Your Preference</h2>
-            
-            <form action="/preference" method="post" id="preference-form">
-                <!-- Date Picker -->
-                <div class="mb-8">
-                    <label class="block text-gray-700 text-sm font-semibold mb-2">Select Date</label>
-                    <input type="date" id="datePicker" name="date" 
-                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                           required>
-                </div>
-
-                <!-- Meal Options -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Vegetarian Card -->
-                    <label class="cursor-pointer">
-                        <input type="radio" name="preference" value="veg" 
-                               class="hidden peer">
-                        <div class="p-6 border-2 rounded-2xl peer-checked:border-green-500 
-                                  peer-checked:bg-green-50 hover:border-green-300 transition-all h-full">
-                            <div class="text-center">
-<!--                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046784.png" -->
-<!--                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">-->
-                                <img src="/salad.png" class="w-16 h-16 mx-auto mb-4 animate-pulse">
-                                <h3 class="text-xl font-semibold mb-2">Veg</h3>
-                                <p class="text-gray-600 text-sm">Vegetable Rice</p>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- Chicken Card -->
-                    <label class="cursor-pointer">
-                        <input type="radio" name="preference" value="chicken" 
-                               class="hidden peer">
-                        <div class="p-6 border-2 rounded-2xl peer-checked:border-orange-500 
-                                  peer-checked:bg-orange-50 hover:border-orange-300 transition-all h-full">
-                            <div class="text-center">
-<!--                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046771.png" -->
-<!--                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">-->
-                                <img src="/chicken.png" class="w-16 h-16 mx-auto mb-4 animate-pulse">
-                                <h3 class="text-xl font-semibold mb-2">Chicken</h3>
-                                <p class="text-gray-600 text-sm">Chicken Rice</p>
-                            </div>
-                        </div>
-                    </label>
-
-                    <!-- Fish Card -->
-                    <label class="cursor-pointer">
-                        <input type="radio" name="preference" value="fish" 
-                               class="hidden peer">
-                        <div class="p-6 border-2 rounded-2xl peer-checked:border-blue-500 
-                                  peer-checked:bg-blue-50 hover:border-blue-300 transition-all h-full">
-                            <div class="text-center">
-<!--                                <img src="https://cdn-icons-png.flaticon.com/512/1046/1046769.png" -->
-<!--                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">-->
-                                <img src="/fish.png" class="w-16 h-16 mx-auto mb-4 animate-pulse">
-                                <h3 class="text-xl font-semibold mb-2">Fish</h3>
-                                <p class="text-gray-600 text-sm">Fish Rice</p>
-                            </div>
-                        </div>
-                    </label>
-                </div>
-
-                <div class="mt-8 text-center">
-                    <button type="submit" 
-                            class="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 
-                                   transition-all shadow-lg relative" id="submit-btn">
-                        <span class="when-enabled">Save Selection</span>
-                        <span class="when-loading hidden">
-                            <svg class="animate-spin h-5 w-5 text-white mx-auto" 
-                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                        </span>
-                    </button>
-                </div>
-            </form>
-        </div>
     </div>
+</nav>
 
-    <% if (success) { %>
-        <div class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-xl shadow-xl 
-                    animate-fade-in flex items-center space-x-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-            </svg>
-            <span>Preference saved successfully!</span>
-        </div>
-    <% } %>
+<div class="max-w-4xl mx-auto py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 hover-scale">
+        <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Your Preference</h2>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const datePicker = document.getElementById('datePicker');
-            const preferences = <%- JSON.stringify(preferences) %>;
+        <form action="/preference" method="post" id="preference-form">
 
-            // IST time calculation
-            const now = new Date();
-            const istOffset = 330; // minutes
-            const istTime = new Date(now.getTime() + (istOffset - now.getTimezoneOffset()) * 60000);
-            
-            // Date constraints
-            const today = new Date(istTime);
-            today.setHours(0,0,0,0);
-            
-            const tomorrow = new Date(today);
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            
-            const dayAfter = new Date(today);
-            dayAfter.setDate(dayAfter.getDate() + 2);
+            <!-- Date Picker -->
+            <div class="mb-8">
+                <label for="datePicker" class="block text-gray-700 text-sm font-semibold mb-2">Select Date</label>
+                <input type="text" id="datePicker" name="date"
+                       class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 flatpickr"
+                       required aria-label="Select date">
+            </div>
 
-            // Set min/max dates
-            let minDate = today;
-            if (istTime.getHours() >= 10) { // After 10 AM IST
-                minDate = tomorrow;
+            <!-- Meal Options -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <% const mealOptions = {
+                    veg: { title: 'Veg', desc: 'Vegetable Rice', img: '/salad.png', color: 'green' },
+                    chicken: { title: 'Chicken', desc: 'Chicken Rice', img: '/chicken.png', color: 'orange' },
+                    fish: { title: 'Fish', desc: 'Fish Rice', img: '/fish.png', color: 'blue' }
+                };
+                Object.entries(mealOptions).forEach(([pref, {title, desc, img, color}]) => { %>
+                    <label class="cursor-pointer">
+                        <input type="radio"
+                               name="preference"
+                               value="<%= pref %>"
+                               class="hidden peer"
+                               required
+                               aria-label="<%= title %>">
+                        <div class="p-6 border-2 rounded-2xl peer-checked:border-<%= color %>-500 peer-checked:bg-<%= color %>-50 hover:border-<%= color %>-300 transition-all h-full">
+                            <div class="text-center">
+                                <img src="<%= img %>"
+                                     alt="<%= title %> meal"
+                                     class="w-16 h-16 mx-auto mb-4 animate-pulse">
+                                <h3 class="text-xl font-semibold mb-2"><%= title %></h3>
+                                <p class="text-gray-600 text-sm"><%= desc %></p>
+                            </div>
+                        </div>
+                    </label>
+                <% }) %>
+            </div>
+
+            <div class="mt-8 text-center">
+                <button type="submit"
+                        class="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700
+                                   transition-all shadow-lg relative" id="submit-btn">
+                    <span class="when-enabled">Save Preference</span>
+                    <span class="when-loading hidden">
+                        <svg class="animate-spin h-5 w-5 text-white mx-auto"
+                             xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Date calculation functions
+        const getNextWeekday = (date) => {
+            const nextDay = new Date(date);
+            nextDay.setDate(nextDay.getDate() + 1);
+            while ([0, 6].includes(nextDay.getDay())) {
+                nextDay.setDate(nextDay.getDate() + 1);
             }
-            
-            datePicker.min = formatDate(minDate);
-            datePicker.max = formatDate(dayAfter);
+            return nextDay;
+        };
 
-            // Disable weekends
-            datePicker.addEventListener('input', function() {
-                const selectedDate = new Date(this.value);
-                const day = selectedDate.getDay();
-                
-                if (day === 0 || day === 6) {
-                    this.setCustomValidity('Weekends are not allowed');
-                } else {
-                    this.setCustomValidity('');
-                }
-            });
+        const now = new Date();
+        const currentHour = now.getHours();
+        let minDate, maxDate;
 
-            // Preselect existing preference
-            datePicker.addEventListener('change', function() {
-                const selectedDate = this.value;
-                const preference = preferences[selectedDate];
-                if (preference) {
-                    document.querySelector(`input[value="${preference}"]`).checked = true;
-                }
-            });
+        if (currentHour < 10) {
+            minDate = "today";
+            maxDate = getNextWeekday(now);
+        } else {
+            minDate = getNextWeekday(now);
+            maxDate = getNextWeekday(minDate);
+        }
 
-            function formatDate(date) {
-                return date.toISOString().split('T')[0];
+        // Flatpickr initialization
+        flatpickr("#datePicker", {
+            minDate: minDate,
+            maxDate: maxDate,
+            disable: [date => [0, 6].includes(date.getDay())],
+            allowInput: false, // Prevent manual input
+            clickOpens: true,  // Force calendar use
+            defaultDate: minDate, // Set default selection
+            onChange: function(selectedDates) {
+                const dateInput = document.getElementById('datePicker');
+                // Remove error state when date is selected
+                dateInput.classList.remove('date-picker-error');
+                // Force validation check
+                dateInput.reportValidity();
             }
         });
 
-        document.getElementById('preference-form').addEventListener('submit', () => {
+        // Form submission handler
+        document.getElementById('preference-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
             const btn = document.getElementById('submit-btn');
+            const form = e.target;
+
+            // Client-side validation
+            const dateInput = document.getElementById('datePicker');
+            // Reset error state
+            dateInput.classList.remove('date-picker-error');
+
+            if (!dateInput.value) {
+                dateInput.classList.add('date-picker-error');
+                Toastify({
+                    text: "Please select a date first!",
+                    duration: 3000,
+                    backgroundColor: "#EF4444",
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center'
+                    }
+                }).showToast();
+                return;
+            }
+
+            // Get the selected preference
+            const preference = form.querySelector('input[name="preference"]:checked');
+            if (!preference) {
+                Toastify({
+                    text: "Please select a meal preference!",
+                    duration: 3000,
+                    backgroundColor: "#EF4444",
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center'
+                    }
+                }).showToast();
+                return;
+            }
+
+            // Show loading state
             btn.classList.add('opacity-75', 'cursor-not-allowed');
             btn.querySelector('.when-enabled').classList.add('hidden');
             btn.querySelector('.when-loading').classList.remove('hidden');
+
+            try {
+                // Create proper form data
+                const payload = new URLSearchParams();
+                payload.append('date', dateInput.value);
+                payload.append('preference', preference.value);
+
+                const response = await fetch('/preference', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded'
+                    },
+                    body: payload
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Clear selection after successful submission
+                    preference.checked = false;
+                    dateInput._flatpickr.clear();
+                }
+
+                Toastify({
+                    text: result.message || result.error,
+                    duration: 3000,
+                    backgroundColor: response.ok ? "#4CAF50" : "#EF4444",
+                    close: true,
+                    gravity: "top",
+                    position: "right",
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center'
+                    }
+                }).showToast();
+
+            } catch (error) {
+                Toastify({
+                    text: "Network error - please try again",
+                    duration: 3000,
+                    backgroundColor: "#EF4444",
+                    close: true,
+                    style: {
+                        display: 'flex',
+                        alignItems: 'center'
+                    }
+                }).showToast();
+            } finally {
+                // Reset loading state
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+                btn.querySelector('.when-enabled').classList.remove('hidden');
+                btn.querySelector('.when-loading').classList.add('hidden');
+            }
         });
 
-        function updateGreeting() {
+        // Dynamic greeting
+        const updateGreeting = () => {
             const hour = new Date().getHours();
-            const greeting = document.getElementById('greeting');
-
-            if (hour < 12) {
-                greeting.textContent = 'Good morning';
-            } else if (hour < 18) {
-                greeting.textContent = 'Good afternoon';
-            } else {
-                greeting.textContent = 'Good evening';
-            }
-        }
-
-        // Run on page load and every minute to stay accurate
+            document.getElementById('greeting').textContent =
+                hour < 12 ? 'Good morning' :
+                    hour < 18 ? 'Good afternoon' : 'Good evening';
+        };
         updateGreeting();
         setInterval(updateGreeting, 60000);
-    </script>
+    });
+</script>
 </body>
 </html>
