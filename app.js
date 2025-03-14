@@ -227,16 +227,33 @@ app.post('/preference', ensureAuthenticated, async (req, res) => {
     // Server-side validation
     const selectedDate = new Date(date);
     const now = new Date();
+
+    // Set today's date to midnight
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
-    let minDate = new Date(today);
-    if (now.getHours() >= 10) { // After 10 AM local time
-      minDate.setDate(minDate.getDate() + 1);
+    // Function to skip weekends
+    function skipWeekends(date) {
+      const day = date.getDay();
+      if (day === 0) { // Sunday
+        date.setDate(date.getDate() + 1); // Move to Monday
+      } else if (day === 6) { // Saturday
+        date.setDate(date.getDate() + 2); // Move to Monday
+      }
+      return date;
     }
 
-    const maxDate = new Date(minDate);
+    // Determine the minimum date
+    let minDate = new Date(today);
+    if (now.getHours() >= 10) { // After 10 AM local time
+      minDate.setDate(minDate.getDate() + 1); // Move to the next day
+    }
+    minDate = skipWeekends(minDate); // Skip weekends for minDate
+
+    // Determine the maximum date (2 days after minDate)
+    let maxDate = new Date(minDate);
     maxDate.setDate(maxDate.getDate() + 2);
+    maxDate = skipWeekends(maxDate); // Skip weekends for maxDate
 
     const selectedDateUpper = new Date(selectedDate);
     selectedDateUpper.setHours(0, 0, 0, 0);
@@ -246,10 +263,10 @@ app.post('/preference', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'Invalid date selection' });
     }
 
-    // Validate weekends
+    // Validate weekends (additional check, though weekends are already skipped)
     const day = selectedDate.getDay();
-    if (day === 0 || day === 6) {
-      return res.status(400).json({ error: 'Weekends are not allowed' });
+    if (day === 0 || day === 6) { // 0 = Sunday, 6 = Saturday
+      return res.status(400).send('Weekends are not allowed');
     }
 
     await new Promise((resolve, reject) => {
