@@ -27,140 +27,115 @@ app.use(passport.session());
 // EJS setup
 app.set('view engine', 'ejs');
 
-// Rate limiting for login route
+// Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: 'Too many login attempts, please try again later.'
 });
 app.use('/login', limiter);
 
 // Passport configuration
 passport.use(new LocalStrategy(
-  async (username, password, done) => {
-    try {
-      const user = await new Promise((resolve, reject) => {
-        db.get('SELECT * FROM users WHERE username = ?', [username], 
-          (err, row) => err ? reject(err) : resolve(row));
-      });
-      
-      if (!user) return done(null, false);
-      if (await bcrypt.compare(password, user.password)) return done(null, user);
-      return done(null, false);
-    } catch (err) { return done(err); }
-  }
+    async (username, password, done) => {
+      try {
+        const user = await new Promise((resolve, reject) => {
+          db.get('SELECT * FROM users WHERE username = ?', [username],
+              (err, row) => err ? reject(err) : resolve(row));
+        });
+
+        if (!user) return done(null, false);
+        if (await bcrypt.compare(password, user.password)) return done(null, user);
+        return done(null, false);
+      } catch (err) { return done(err); }
+    }
 ));
 
 passport.use(new GoogleStrategy({
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.GOOGLE_CALLBACK_URL,
-  scope: ['profile', 'email']
-}, 
-async (accessToken, refreshToken, profile, done) => {
-  try {
-    const email = profile.emails[0].value;
-    const username = email.split('@')[0];
-    
-    // Check existing user (both local and Google)
-    const existingUser = await new Promise((resolve, reject) => {
-      db.get(
-        'SELECT * FROM users WHERE google_id = ? OR email = ?',
-        [profile.id, email],
-        (err, row) => {
-          if (err) reject(err);
-          resolve(row);
-        }
-      );
-    });
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+      scope: ['profile', 'email']
+    },
+    async (accessToken, refreshToken, profile, done) => {
+      try {
+        const email = profile.emails[0].value;
+        const username = email.split('@')[0];
 
-    if (existingUser) {
-      // Merge accounts if needed
-      if (!existingUser.google_id && existingUser.email === email) {
-        await new Promise((resolve, reject) => {
-          db.run(
-            'UPDATE users SET google_id = ? WHERE id = ?',
-            [profile.id, existingUser.id],
-            (err) => err ? reject(err) : resolve()
+        const existingUser = await new Promise((resolve, reject) => {
+          db.get(
+              'SELECT * FROM users WHERE google_id = ? OR email = ?',
+              [profile.id, email],
+              (err, row) => err ? reject(err) : resolve(row)
           );
         });
+
+        if (existingUser) {
+          if (!existingUser.google_id && existingUser.email === email) {
+            await new Promise((resolve, reject) => {
+              db.run(
+                  'UPDATE users SET google_id = ? WHERE id = ?',
+                  [profile.id, existingUser.id],
+                  (err) => err ? reject(err) : resolve()
+              );
+            });
+          }
+          return done(null, existingUser);
+        }
+
+        const { lastID } = await new Promise((resolve, reject) => {
+          db.run(
+              'INSERT INTO users (google_id, email, display_name, role, username) VALUES (?, ?, ?, ?, ?)',
+              [profile.id, email, profile.displayName, 'user', username],
+              function(err) {
+                if (err) reject(err);
+                resolve({ lastID: this.lastID });
+              }
+          );
+        });
+
+        const newUser = await new Promise((resolve, reject) => {
+          db.get(
+              'SELECT * FROM users WHERE id = ?',
+              [lastID],
+              (err, row) => err ? reject(err) : resolve(row)
+          );
+        });
+
+        done(null, newUser);
+      } catch (err) {
+        done(err);
       }
-      return done(null, existingUser);
-    }
-
-    // Create new Google user
-    const { lastID } = await new Promise((resolve, reject) => {
-      db.run(
-        'INSERT INTO users (google_id, email, display_name, role, username) VALUES (?, ?, ?, ?, ?)',
-        [profile.id, email, profile.displayName, 'user', username],
-        function(err) {
-          if (err) reject(err);
-          resolve({ lastID: this.lastID });
-        }
-      );
-    });
-
-    // Get full user data
-    const newUser = await new Promise((resolve, reject) => {
-      db.get(
-        'SELECT * FROM users WHERE id = ?',
-        [lastID],
-        (err, row) => {
-          if (err) reject(err);
-          resolve(row);
-        }
-      );
-    });
-
-    done(null, newUser);
-  } catch (err) {
-    done(err);
-  }
-}));
+    }));
 
 passport.serializeUser((user, done) => {
   try {
-    // Verify user object structure
-    if (!user?.id) {
-      throw new Error('Invalid user object for serialization');
-    }
+    if (!user?.id) throw new Error('Invalid user object for serialization');
     done(null, user.id);
   } catch (err) {
     done(err);
   }
 });
-// passport.deserializeUser((id, done) => {
-//   db.get('SELECT * FROM users WHERE id = ?', [id], (err, user) => done(err, user));
-// });
-// Deserialization (enhanced error handling)
+
 passport.deserializeUser(async (id, done) => {
   try {
     const user = await new Promise((resolve, reject) => {
       db.get(
-        'SELECT id, username, email, display_name, role, google_id FROM users WHERE id = ?',
-        [id],
-        (err, row) => {
-          if (err) return reject(err);
-          resolve(row);
-        }
+          'SELECT id, username, email, display_name, role, google_id FROM users WHERE id = ?',
+          [id],
+          (err, row) => err ? reject(err) : resolve(row)
       );
     });
 
-    if (!user) {
-      return done(new Error('User not found in database'));
-    }
-
-    // Ensure proper user object structure
-    const userData = {
+    if (!user) return done(new Error('User not found in database'));
+    done(null, {
       id: user.id,
       username: user.username,
       email: user.email,
       displayName: user.display_name,
       role: user.role,
       googleId: user.google_id
-    };
-
-    done(null, userData);
+    });
   } catch (err) {
     done(err);
   }
@@ -169,8 +144,8 @@ passport.deserializeUser(async (id, done) => {
 // Routes
 app.get('/', (req, res) => res.redirect('/login'));
 
-app.get('/login', (req, res) => res.render('login', { 
-  error: req.query.error 
+app.get('/login', (req, res) => res.render('login', {
+  error: req.query.error
 }));
 
 app.post('/login', passport.authenticate('local', {
@@ -180,14 +155,13 @@ app.post('/login', passport.authenticate('local', {
 
 app.get('/logout', (req, res, next) => {
   req.logout((err) => {
-    if (err) { return next(err); }
+    if (err) return next(err);
     res.redirect('/login');
   });
 });
 
 app.get('/home', ensureAuthenticated, async (req, res) => {
   try {
-    // Get all user preferences
     const preferences = await new Promise((resolve, reject) => {
       db.all(
           'SELECT date, preference FROM lunch_preferences WHERE user_id = ?',
@@ -196,7 +170,6 @@ app.get('/home', ensureAuthenticated, async (req, res) => {
       );
     });
 
-    // Create lookup object { date: preference }
     const preferencesMap = preferences.reduce((acc, p) => {
       acc[p.date] = p.preference;
       return acc;
@@ -217,56 +190,40 @@ app.get('/home', ensureAuthenticated, async (req, res) => {
 app.post('/preference', ensureAuthenticated, async (req, res) => {
   try {
     const { preference, date } = req.body;
+    if (!date) return res.status(400).json({ error: 'Date selection is required' });
 
-    // Mandatory date check
-    if (!date) {
-      return res.status(400).json({ error: 'Date selection is required' });
-    }
     const isEdit = await checkExistingPreference(req.user.id, date);
-
-    // Server-side validation
     const selectedDate = new Date(date);
     const now = new Date();
 
-    // Set today's date to midnight
+    // Date validation logic
     const today = new Date(now);
     today.setHours(0, 0, 0, 0);
 
-    // Function to skip weekends
-    function skipWeekends(date) {
+    const skipWeekends = (date) => {
       const day = date.getDay();
-      if (day === 0) { // Sunday
-        date.setDate(date.getDate() + 1); // Move to Monday
-      } else if (day === 6) { // Saturday
-        date.setDate(date.getDate() + 2); // Move to Monday
-      }
+      if (day === 0) date.setDate(date.getDate() + 1);
+      else if (day === 6) date.setDate(date.getDate() + 2);
       return date;
-    }
+    };
 
-    // Determine the minimum date
     let minDate = new Date(today);
-    if (now.getHours() >= 10) { // After 10 AM local time
-      minDate.setDate(minDate.getDate() + 1); // Move to the next day
-    }
-    minDate = skipWeekends(minDate); // Skip weekends for minDate
+    if (now.getHours() >= 10) minDate.setDate(minDate.getDate() + 1);
+    minDate = skipWeekends(minDate);
 
-    // Determine the maximum date (2 days after minDate)
     let maxDate = new Date(minDate);
     maxDate.setDate(maxDate.getDate() + 2);
-    maxDate = skipWeekends(maxDate); // Skip weekends for maxDate
+    maxDate = skipWeekends(maxDate);
 
     const selectedDateUpper = new Date(selectedDate);
     selectedDateUpper.setHours(0, 0, 0, 0);
 
-    // Validate date range
     if (selectedDate < minDate || selectedDateUpper > maxDate) {
       return res.status(400).json({ error: 'Invalid date selection' });
     }
 
-    // Validate weekends (additional check, though weekends are already skipped)
-    const day = selectedDate.getDay();
-    if (day === 0 || day === 6) { // 0 = Sunday, 6 = Saturday
-      return res.status(400).send('Weekends are not allowed');
+    if ([0, 6].includes(selectedDate.getDay())) {
+      return res.status(400).json({ error: 'Weekends are not allowed' });
     }
 
     await new Promise((resolve, reject) => {
@@ -372,14 +329,17 @@ function ensureAdmin(req, res, next) {
 }
 
 async function checkExistingPreference(userId, date) {
-  const existing = await db.get(
-      'SELECT 1 FROM lunch_preferences WHERE user_id = ? AND date = ?',
-      [userId, date]
-  );
+  const existing = await new Promise((resolve, reject) => {
+    db.get(
+        'SELECT 1 FROM lunch_preferences WHERE user_id = ? AND date = ?',
+        [userId, date],
+        (err, row) => err ? reject(err) : resolve(row)
+    );
+  });
   return !!existing;
 }
 
-// Centralized error handling
+// Error handling
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).send('Something broke!');

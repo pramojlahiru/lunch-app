@@ -43,7 +43,6 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-8">Select Your Preference</h2>
 
         <form action="/preference" method="post" id="preference-form">
-
             <!-- Date Picker -->
             <div class="mb-8">
                 <label for="datePicker" class="block text-gray-700 text-sm font-semibold mb-2">Select Date</label>
@@ -102,6 +101,23 @@
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize preferences from server data
+        const preferences = <%- JSON.stringify(preferences) %>;
+        const submitBtn = document.getElementById('submit-btn');
+        const btnText = submitBtn.querySelector('.when-enabled');
+        const dateInput = document.getElementById('datePicker');
+
+        // Function to update button text
+        const updateButtonText = () => {
+            const selectedDate = dateInput.value;
+            btnText.textContent = selectedDate && preferences[selectedDate]
+                ? 'Edit Preference'
+                : 'Save Preference';
+        };
+
+        // Set initial button text
+        updateButtonText();
+
         // Date calculation functions
         const getNextWeekday = (date) => {
             const nextDay = new Date(date);
@@ -129,14 +145,12 @@
             minDate: minDate,
             maxDate: maxDate,
             disable: [date => [0, 6].includes(date.getDay())],
-            allowInput: false, // Prevent manual input
-            clickOpens: true,  // Force calendar use
-            defaultDate: minDate, // Set default selection
+            allowInput: false,
+            clickOpens: true,
+            defaultDate: minDate,
             onChange: function(selectedDates) {
-                const dateInput = document.getElementById('datePicker');
-                // Remove error state when date is selected
                 dateInput.classList.remove('date-picker-error');
-                // Force validation check
+                updateButtonText();
                 dateInput.reportValidity();
             }
         });
@@ -146,12 +160,12 @@
             e.preventDefault();
             const btn = document.getElementById('submit-btn');
             const form = e.target;
-
-            // Client-side validation
             const dateInput = document.getElementById('datePicker');
+
             // Reset error state
             dateInput.classList.remove('date-picker-error');
 
+            // Client-side validation
             if (!dateInput.value) {
                 dateInput.classList.add('date-picker-error');
                 Toastify({
@@ -161,15 +175,11 @@
                     close: true,
                     gravity: "top",
                     position: "right",
-                    style: {
-                        display: 'flex',
-                        alignItems: 'center'
-                    }
+                    style: { display: 'flex', alignItems: 'center' }
                 }).showToast();
                 return;
             }
 
-            // Get the selected preference
             const preference = form.querySelector('input[name="preference"]:checked');
             if (!preference) {
                 Toastify({
@@ -179,10 +189,7 @@
                     close: true,
                     gravity: "top",
                     position: "right",
-                    style: {
-                        display: 'flex',
-                        alignItems: 'center'
-                    }
+                    style: { display: 'flex', alignItems: 'center' }
                 }).showToast();
                 return;
             }
@@ -193,23 +200,22 @@
             btn.querySelector('.when-loading').classList.remove('hidden');
 
             try {
-                // Create proper form data
                 const payload = new URLSearchParams();
                 payload.append('date', dateInput.value);
                 payload.append('preference', preference.value);
 
                 const response = await fetch('/preference', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    },
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: payload
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    // Clear selection after successful submission
+                    // Update local preferences and UI
+                    preferences[dateInput.value] = preference.value;
+                    updateButtonText();
                     preference.checked = false;
                     dateInput._flatpickr.clear();
                 }
@@ -221,10 +227,7 @@
                     close: true,
                     gravity: "top",
                     position: "right",
-                    style: {
-                        display: 'flex',
-                        alignItems: 'center'
-                    }
+                    style: { display: 'flex', alignItems: 'center' }
                 }).showToast();
 
             } catch (error) {
@@ -233,13 +236,9 @@
                     duration: 3000,
                     backgroundColor: "#EF4444",
                     close: true,
-                    style: {
-                        display: 'flex',
-                        alignItems: 'center'
-                    }
+                    style: { display: 'flex', alignItems: 'center' }
                 }).showToast();
             } finally {
-                // Reset loading state
                 btn.classList.remove('opacity-75', 'cursor-not-allowed');
                 btn.querySelector('.when-enabled').classList.remove('hidden');
                 btn.querySelector('.when-loading').classList.add('hidden');
