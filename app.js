@@ -6,7 +6,11 @@ const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcrypt');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('database.sqlite');
+const db = new sqlite3.Database('database.sqlite', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
+  if (err) throw err;
+});
+db.configure('busyTimeout', 5000); // Handle concurrent writes
+
 const rateLimit = require('express-rate-limit');
 const { Parser } = require('json2csv');
 
@@ -327,6 +331,9 @@ app.get('/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
 
 app.post('/admin/users/:id/role', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
+    if (req.params.id === req.user.id) {
+      throw new AppError('Cannot modify your own role', 403);
+    }
     const { role } = req.body;
     await new Promise((resolve, reject) => {
       db.run(

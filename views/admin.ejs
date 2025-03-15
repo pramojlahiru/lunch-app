@@ -135,8 +135,41 @@
                              onclick="toggleDetails('<%= date %>')">
                             <div class="flex items-center gap-4">
                                 <span class="text-gray-600"><%= date %></span>
-                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
-                                    Total: <%= data.total %>
+                                <span class="bg-[#4EAD68]/10 text-[#4EAD68] px-3 py-1 rounded-full text-sm relative group">
+                                    <div class="flex items-center gap-1">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                                        </svg>
+                                        Total: <%= data.total %>
+                                    </div>
+                                    <div class="absolute hidden group-hover:block bottom-full left-1/2 -translate-x-1/2 mb-2 w-48">
+                                    <div class="bg-white border border-green-100 text-gray-700 text-sm rounded-xl p-4 shadow-lg relative">
+                                        <div class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-t border-l border-green-100 rotate-45"></div>
+                                        <div class="flex items-center gap-2 mb-2 text-green-700">
+                                            <svg class="w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                            </svg>
+                                            <span class="font-semibold text-xs uppercase tracking-wide">Meal Distribution</span>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <% data.details.forEach(function(pref) { %>
+                                                <div class="flex items-center justify-between px-2 py-1.5 rounded-lg bg-green-50/50">
+                                                    <div class="flex items-center gap-2">
+                                                        <span class="w-2 h-2 rounded-full
+                                                        <% if (pref.preference === 'veg') { %>bg-green-500<% } %>
+                                                        <% if (pref.preference === 'chicken') { %>bg-orange-400<% } %>
+                                                        <% if (pref.preference === 'fish') { %>bg-blue-400<% } %>">
+                                                        </span>
+                                                        <span class="capitalize font-medium text-gray-600"><%= pref.preference %>:</span>
+                                                    </div>
+                                                    <span class="text-gray-500 font-medium"><%= pref.count %></span>
+                                                </div>
+                                            <% }); %>
+                                        </div>
+                                        <div class="absolute bottom-[-6px] left-1/2 -translate-x-1/2 border-8 border-x-transparent border-t-transparent border-b-black"></div>
+                                    </div>
+                                    </div>
                                 </span>
                             </div>
                             <svg id="icon-<%= date %>" class="w-6 h-6 text-gray-600 transform transition-transform <%= date === today ? 'rotate-180' : '' %>"
