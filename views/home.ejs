@@ -152,8 +152,28 @@
                 dateInput.classList.remove('date-picker-error');
                 updateButtonText();
                 dateInput.reportValidity();
+                checkSavedPreference(dateInput.value);
             }
         });
+
+        // Function to check saved preference
+        const checkSavedPreference = (selectedDate) => {
+            const preference = preferences[selectedDate];
+            if (preference) {
+                document.querySelectorAll('input[name="preference"]').forEach(radio => {
+                    radio.checked = radio.value === preference;
+                });
+            } else {
+                document.querySelectorAll('input[name="preference"]').forEach(radio => {
+                    radio.checked = false;
+                });
+            }
+        };
+
+        // Set initial state
+        const initialDate = dateInput.value;
+        checkSavedPreference(initialDate);
+        updateButtonText();
 
         // Form submission handler
         document.getElementById('preference-form').addEventListener('submit', async (e) => {
@@ -218,6 +238,7 @@
                     updateButtonText();
                     preference.checked = false;
                     dateInput._flatpickr.clear();
+                    checkSavedPreference(dateInput.value);
                 }
 
                 Toastify({

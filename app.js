@@ -13,6 +13,7 @@ const { Parser } = require('json2csv');
 const app = express();
 
 // Middleware
+app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('resources'));
 app.use(session({
@@ -30,7 +31,7 @@ app.set('view engine', 'ejs');
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 10,
   message: 'Too many login attempts, please try again later.'
 });
 app.use('/login', limiter);
@@ -299,6 +300,91 @@ app.get('/export-preferences', ensureAuthenticated, ensureAdmin, async (req, res
   } catch (err) {
     console.error(err);
     res.status(500).send('Server Error');
+  }
+});
+
+// User Management Routes
+app.get('/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const users = await new Promise((resolve, reject) => {
+      db.all('SELECT id, username, email, role, google_id FROM users', (err, rows) => {
+        err ? reject(err) : resolve(rows);
+      });
+    });
+
+    res.render('admin-users', {
+      user: req.user, //Logged-in user
+      currentUser: req.user,
+      users: users
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/admin/users/:id/role', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const { role } = req.body;
+    await new Promise((resolve, reject) => {
+      db.run(
+          'UPDATE users SET role = ? WHERE id = ?',
+          [role, req.params.id],
+          (err) => err ? reject(err) : resolve()
+      );
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update role' });
+  }
+});
+
+app.post('/admin/users/:id/delete', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM users WHERE id = ?', [req.params.id], (err) => {
+        err ? reject(err) : resolve();
+      });
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// Enhanced Preferences Management
+app.get('/admin/preferences', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    const preferences = await new Promise((resolve, reject) => {
+      db.all(`
+                SELECT lp.id, lp.date, lp.preference, 
+                    u.id as user_id, u.display_name, u.email
+                FROM lunch_preferences lp
+                JOIN users u ON lp.user_id = u.id
+                ORDER BY lp.date DESC
+            `, (err, rows) => err ? reject(err) : resolve(rows));
+    });
+
+    res.render('admin-preferences', {
+      user: req.user,
+      preferences: preferences
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server Error');
+  }
+});
+
+app.post('/admin/preferences/:id/delete', ensureAuthenticated, ensureAdmin, async (req, res) => {
+  try {
+    await new Promise((resolve, reject) => {
+      db.run('DELETE FROM lunch_preferences WHERE id = ?', [req.params.id], (err) => {
+        err ? reject(err) : resolve();
+      });
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to delete preference' });
   }
 });
 

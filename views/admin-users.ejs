@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="/styles.css">
+    <style>
+        .hover-scale-icon {
+            transition: transform 0.3s ease;
+        }
+        .hover-scale-icon:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+<nav class="bg-white shadow-lg">
+    <div class="max-w-6xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <div class="flex items-center space-x-2">
+                <img src="/fried-rice-outlined.png" class="h-8 w-8" alt="App Logo">
+                <span class="text-xl font-bold text-gray-800">Admin Dashboard</span>
+            </div>
+            <div class="flex items-center space-x-4">
+                <span class="text-gray-600">
+                    <span id="greeting"></span>, <%= user.displayName %>
+                </span>
+                <a href="/home"
+                   class="text-gray-600 hover:text-[#4EAD68] transition-colors"
+                   title="Home">
+                    <img src="/home.png" class="h-8 w-8 hover-scale-icon">
+                </a>
+                <a href="/logout"
+                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
+                              transition-all shadow-md">
+                    Logout
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="max-w-6xl mx-auto py-12 px-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <div class="mb-8 flex gap-4">
+            <a href="/admin" class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all">Meal Reports</a>
+            <a href="/admin/users" class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all">Manage Users</a>
+            <a href="/admin/preferences" class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-all">All Preferences</a>
+        </div>
+
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">User Management</h2>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                <% users.forEach(user => { %>
+                    <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900"><%= user.display_name %></div>
+                            <div class="text-sm text-gray-500"><%= user.email %></div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <select class="role-select border rounded px-3 py-1 focus:ring-2 focus:ring-blue-500"
+                                    data-user-id="<%= user.id %>"
+                                    <%= user.id === currentUser.id ? 'disabled' : '' %>>
+                                <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>User</option>
+                                <option value="admin" <%= user.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                            </select>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <% if (user.id !== currentUser.id) { %>
+                                <button class="delete-user-btn text-red-600 hover:text-red-900 font-medium"
+                                        data-user-id="<%= user.id %>">
+                                    Delete
+                                </button>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>
+    // Toastify configuration matching existing styles
+    const toastConfig = {
+        duration: 3000,
+        close: true,
+        gravity: "top",
+        position: "right",
+        style: {
+            display: 'flex',
+            alignItems: 'center',
+            borderRadius: '8px',
+            padding: '16px 24px'
+        }
+    };
+
+    document.querySelectorAll('.role-select').forEach(select => {
+        select.addEventListener('change', async function() {
+            const userId = this.dataset.userId;
+            const newRole = this.value;
+
+            try {
+                const response = await fetch(`/admin/users/${userId}/role`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ role: newRole })
+                });
+
+                if (!response.ok) throw new Error('Failed to update role');
+                Toastify({
+                    ...toastConfig,
+                    text: "Role updated successfully!",
+                    backgroundColor: "#4CAF50",
+                }).showToast();
+            } catch (error) {
+                Toastify({
+                    ...toastConfig,
+                    text: "Failed to update role",
+                    backgroundColor: "#EF4444",
+                }).showToast();
+            }
+        });
+    });
+
+    document.querySelectorAll('.delete-user-btn').forEach(button => {
+        button.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            if (!confirm('Are you sure you want to delete this user?')) return;
+
+            try {
+                const response = await fetch(`/admin/users/${userId}/delete`, {
+                    method: 'POST'
+                });
+
+                if (!response.ok) throw new Error('Failed to delete user');
+                this.closest('tr').remove();
+                Toastify({
+                    ...toastConfig,
+                    text: "User deleted successfully!",
+                    backgroundColor: "#4CAF50",
+                }).showToast();
+            } catch (error) {
+                Toastify({
+                    ...toastConfig,
+                    text: "Failed to delete user",
+                    backgroundColor: "#EF4444",
+                }).showToast();
+            }
+        });
+    });
+
+    // Dynamic greeting
+    const updateGreeting = () => {
+        const hour = new Date().getHours();
+        const greeting = document.getElementById('greeting');
+        greeting.textContent = hour < 12 ? 'Good morning' :
+            hour < 18 ? 'Good afternoon' : 'Good evening';
+    };
+    updateGreeting();
+    setInterval(updateGreeting, 60000);
+</script>
+</body>
+</html>
