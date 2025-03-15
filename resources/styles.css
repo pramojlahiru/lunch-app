@@ -137,3 +137,29 @@ form:invalid button[type="submit"] {
     border-color: #EF4444 !important;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.3) !important;
 }
+
+/* Smooth tab transitions */
+.admin-tab {
+    transition: all 0.2s ease-in-out;
+}
+
+/* Active tab indicator animation */
+.admin-tab-active {
+    position: relative;
+}
+
+.admin-tab-active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #3b82f6;
+    animation: tabSlide 0.3s ease-out;
+}
+
+@keyframes tabSlide {
+    from { transform: scaleX(0); }
+    to { transform: scaleX(1); }
+}

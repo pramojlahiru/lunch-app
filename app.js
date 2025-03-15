@@ -272,7 +272,8 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
 
     res.render('admin', {
       user: req.user,
-      groupedData: Object.entries(groupedData)
+      groupedData: Object.entries(groupedData),
+      currentPath: req.path
     });
   } catch (err) {
     console.error(err);
@@ -315,7 +316,8 @@ app.get('/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
     res.render('admin-users', {
       user: req.user, //Logged-in user
       currentUser: req.user,
-      users: users
+      users: users,
+      currentPath: req.path
     });
   } catch (err) {
     console.error(err);
@@ -367,7 +369,8 @@ app.get('/admin/preferences', ensureAuthenticated, ensureAdmin, async (req, res)
 
     res.render('admin-preferences', {
       user: req.user,
-      preferences: preferences
+      preferences: preferences,
+      currentPath: req.path
     });
   } catch (err) {
     console.error(err);
