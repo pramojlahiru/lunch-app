@@ -308,7 +308,7 @@ app.get('/export-preferences', ensureAuthenticated, ensureAdmin, async (req, res
 app.get('/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
     const users = await new Promise((resolve, reject) => {
-      db.all('SELECT id, username, email, role, google_id FROM users', (err, rows) => {
+      db.all('SELECT id, display_name, username, email, role, google_id FROM users', (err, rows) => {
         err ? reject(err) : resolve(rows);
       });
     });

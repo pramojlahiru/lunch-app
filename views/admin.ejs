@@ -85,55 +85,72 @@
 <div class="max-w-6xl mx-auto py-12 px-4">
     <div class="bg-white rounded-2xl shadow-xl p-8">
         <!-- Tab Navigation -->
-<!--        <div class="flex border-b border-gray-200 mb-8">-->
-        <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-8">
-            <a href="/admin"
-               class="px-4 py-2 text-sm font-medium <%= currentPath === '/admin' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' %>">
-                Meal Reports
-            </a>
-            <a href="/admin/users"
-               class="ml-4 px-4 py-2 text-sm font-medium <%= currentPath === '/admin/users' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' %>">
-                Manage Users
-            </a>
-            <a href="/admin/preferences"
-               class="ml-4 px-4 py-2 text-sm font-medium <%= currentPath === '/admin/preferences' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700' %>">
-                All Preferences
-            </a>
-        </div>
-        <!-- Header Row with Export Button -->
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-bold text-gray-800">Meal Preferences Report</h2>
-            <a href="/export-preferences" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all">
-                Export Data (CSV)
-            </a>
+        <div class="relative border-b border-gray-200 mb-8">
+            <div class="flex space-x-8">
+                <a href="/admin"
+                   class="pb-2 px-1 text-sm font-medium relative transition-all duration-300
+                          <%= currentPath === '/admin' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700' %>">
+                    Meal Reports
+                    <% if (currentPath === '/admin') { %>
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 transition-all duration-300 animate-tabSlide"></span>
+                    <% } %>
+                </a>
+
+                <a href="/admin/users"
+                   class="pb-2 px-1 text-sm font-medium relative transition-all duration-300
+                          <%= currentPath === '/admin/users' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700' %>">
+                    Manage Users
+                    <% if (currentPath === '/admin/users') { %>
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 transition-all duration-300 animate-tabSlide"></span>
+                    <% } %>
+                </a>
+
+                <a href="/admin/preferences"
+                   class="pb-2 px-1 text-sm font-medium relative transition-all duration-300
+                          <%= currentPath === '/admin/preferences' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700' %>">
+                    All Preferences
+                    <% if (currentPath === '/admin/preferences') { %>
+                        <span class="absolute bottom-0 left-0 w-full h-0.5 bg-blue-600 transition-all duration-300 animate-tabSlide"></span>
+                    <% } %>
+                </a>
+            </div>
         </div>
 
-        <!-- Preferences List -->
-        <div class="space-y-4">
-            <%
-            const today = new Date().toISOString().split('T')[0];
-            groupedData.forEach(function([date, data]) { %>
-                <div class="border rounded-lg">
-                    <div class="bg-gray-50 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
-                         onclick="toggleDetails('<%= date %>')">
-                        <div class="flex items-center gap-4">
-                            <span class="text-gray-600"><%= date %></span>
-                            <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+        <div class="admin-content">
+            <!-- Header Row with Export Button -->
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-800">Meal Preferences Report</h2>
+                <a href="/export-preferences" class="bg-green-500 text-white px-6 py-2 rounded-lg hover:bg-green-600 transition-all">
+                    Export Data (CSV)
+                </a>
+            </div>
+
+            <!-- Preferences List -->
+            <div class="space-y-4">
+                <%
+                const today = new Date().toISOString().split('T')[0];
+                groupedData.forEach(function([date, data]) { %>
+                    <div class="border rounded-lg">
+                        <div class="bg-gray-50 p-4 flex justify-between items-center cursor-pointer hover:bg-gray-100 transition-colors"
+                             onclick="toggleDetails('<%= date %>')">
+                            <div class="flex items-center gap-4">
+                                <span class="text-gray-600"><%= date %></span>
+                                <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
                                     Total: <%= data.total %>
                                 </span>
+                            </div>
+                            <svg id="icon-<%= date %>" class="w-6 h-6 text-gray-600 transform transition-transform <%= date === today ? 'rotate-180' : '' %>"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
                         </div>
-                        <svg id="icon-<%= date %>" class="w-6 h-6 text-gray-600 transform transition-transform <%= date === today ? 'rotate-180' : '' %>"
-                             fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                        </svg>
-                    </div>
 
-                    <div id="details-<%= date %>" class="<%= date === today ? '' : 'hidden' %> bg-gray-50 p-4 border-t">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            <% data.details.forEach(function(pref) { %>
-                                <div class="preference-card bg-white p-4 rounded-lg shadow-sm">
-                                    <% if (pref.display_names) { %>
-                                        <span class="tooltiptext">
+                        <div id="details-<%= date %>" class="<%= date === today ? '' : 'hidden' %> bg-gray-50 p-4 border-t">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <% data.details.forEach(function(pref) { %>
+                                    <div class="preference-card bg-white p-4 rounded-lg shadow-sm">
+                                        <% if (pref.display_names) { %>
+                                            <span class="tooltiptext">
                                                 <div class="max-h-40 overflow-y-auto text-sm">
                                                     <% pref.display_names.split(',').forEach(function(displayName) { %>
                                                         <div class="py-1.5 px-2 hover:bg-white/10 rounded">
@@ -142,28 +159,29 @@
                                                     <% }); %>
                                                 </div>
                                             </span>
-                                    <% } %>
-                                    <div class="flex items-center justify-between mb-2">
+                                        <% } %>
+                                        <div class="flex items-center justify-between mb-2">
                                             <span class="font-medium capitalize">
                                                 <%= pref.preference %>
                                             </span>
-                                        <span class="text-gray-600"><%= pref.count %></span>
-                                    </div>
-                                    <div class="h-2 bg-gray-200 rounded-full">
-                                        <div class="h-full
+                                            <span class="text-gray-600"><%= pref.count %></span>
+                                        </div>
+                                        <div class="h-2 bg-gray-200 rounded-full">
+                                            <div class="h-full
                                                 <% if (pref.preference === 'veg') { %>bg-green-500<% } %>
                                                 <% if (pref.preference === 'chicken') { %>bg-orange-500<% } %>
                                                 <% if (pref.preference === 'fish') { %>bg-blue-500<% } %>
                                                 rounded-full"
-                                             style="width: <%= (pref.count / data.total * 100).toFixed(0) %>%">
+                                                 style="width: <%= (pref.count / data.total * 100).toFixed(0) %>%">
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            <% }); %>
+                                <% }); %>
+                            </div>
                         </div>
                     </div>
-                </div>
-            <% }); %>
+                <% }); %>
+            </div>
         </div>
     </div>
 </div>
