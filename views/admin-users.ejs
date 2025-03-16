@@ -8,6 +8,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/styles.css">
     <style>
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a5568'%3e%3cpath d='M15.3 9.3a1 1 0 0 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 1.4-1.4l3.3 3.29 3.3-3.3z'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            transition: all 0.2s ease;
+        }
+        .custom-select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background-color: #f7fafc;
+        }
         .hover-scale-icon {
             transition: transform 0.3s ease;
         }
@@ -34,8 +49,7 @@
                     <img src="/home.png" class="h-8 w-8 hover-scale-icon">
                 </a>
                 <a href="/logout"
-                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
-                              transition-all shadow-md">
+                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all shadow-md">
                     Logout
                 </a>
             </div>
@@ -45,7 +59,6 @@
 
 <div class="max-w-6xl mx-auto py-12 px-4">
     <div class="bg-white rounded-2xl shadow-xl p-8">
-        <!-- Tab Navigation -->
         <div class="relative border-b border-gray-200 mb-8">
             <div class="flex space-x-8">
                 <a href="/admin"
@@ -80,6 +93,26 @@
         <div class="admin-content">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">User Management</h2>
 
+            <!-- Search Filters -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text"
+                       id="userSearch"
+                       class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-all"
+                       placeholder="Search by name or email...">
+
+                <select id="roleFilter"
+                        class="custom-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-all">
+                    <option value="">All Roles</option>
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                </select>
+
+                <button onclick="resetFilters()"
+                        class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all">
+                    Clear Filters
+                </button>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -97,7 +130,7 @@
                                 <div class="text-sm text-gray-500"><%= user.email %></div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <select class="role-select border rounded px-3 py-1 focus:ring-2 focus:ring-blue-500"
+                                <select class="custom-select w-2/3 px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-all"
                                         data-user-id="<%= user.id %>"
                                         <%= user.id === currentUser.id ? 'disabled' : '' %>>
                                     <option value="user" <%= user.role === 'user' ? 'selected' : '' %>>User</option>
@@ -110,14 +143,7 @@
                                             data-user-id="<%= user.id %>"
                                             data-user-email="<%= user.email %>"
                                             data-user-display-name="<%= user.display_name %>">
-                                        <span class="when-enabled">Delete</span>
-                                        <span class="when-loading hidden">
-                                            <svg class="animate-spin h-5 w-5 text-white mx-auto"
-                                                 xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                            </svg>
-                                        </span>
+                                        Delete
                                     </button>
                                 <% } %>
                             </td>
@@ -126,13 +152,51 @@
                     </tbody>
                 </table>
             </div>
+            <div id="no-results" class="text-center py-8 text-gray-500" style="display: none">
+                No users found matching your criteria
+            </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
-    // Toastify configuration matching existing styles
+    // Filter functionality
+    function filterUsers() {
+        const searchTerm = document.getElementById('userSearch').value.toLowerCase();
+        const roleFilter = document.getElementById('roleFilter').value.toLowerCase();
+        let visibleCount = 0;
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const name = row.children[0].children[0].textContent.toLowerCase();
+            const email = row.children[0].children[1].textContent.toLowerCase();
+            const role = row.children[1].querySelector('select').value.toLowerCase();
+
+            const matchesSearch = name.includes(searchTerm) || email.includes(searchTerm);
+            const matchesRole = role === roleFilter || roleFilter === '';
+
+            if (matchesSearch && matchesRole) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('no-results').style.display = visibleCount > 0 ? 'none' : 'block';
+    }
+
+    function resetFilters() {
+        document.getElementById('userSearch').value = '';
+        document.getElementById('roleFilter').value = '';
+        filterUsers();
+    }
+
+    // Event listeners
+    document.getElementById('userSearch').addEventListener('input', filterUsers);
+    document.getElementById('roleFilter').addEventListener('change', filterUsers);
+
+    // Toast configuration
     const toastConfig = {
         duration: 3000,
         close: true,
@@ -146,6 +210,7 @@
         }
     };
 
+    // Role update handling
     document.querySelectorAll('.role-select').forEach(select => {
         select.addEventListener('change', async function() {
             const userId = this.dataset.userId;
@@ -174,12 +239,14 @@
         });
     });
 
+    // User deletion handling
     document.querySelectorAll('.delete-user-btn').forEach(button => {
         button.addEventListener('click', async function() {
             const userId = this.dataset.userId;
             const userEmail = this.dataset.userEmail;
             const userDisplayName = this.dataset.userDisplayName;
-            if (!confirm(`Are you sure you want to delete ${userDisplayName} (${userEmail}) user? This cannot be undone!`)) return;
+
+            if (!confirm(`Delete user ${userDisplayName} (${userEmail})? This cannot be undone!`)) return;
 
             try {
                 const response = await fetch(`/admin/users/${userId}/delete`, {

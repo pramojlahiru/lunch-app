@@ -5,14 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Preferences Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/styles.css">
     <style>
+        .custom-select {
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%234a5568'%3e%3cpath d='M15.3 9.3a1 1 0 0 1 1.4 1.4l-4 4a1 1 0 0 1-1.4 0l-4-4a1 1 0 0 1 1.4-1.4l3.3 3.29 3.3-3.3z'/%3e%3c/svg%3e");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            transition: all 0.2s ease;
+        }
+        .custom-select:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background-color: #f7fafc;
+        }
         .hover-scale-icon {
             transition: transform 0.3s ease;
         }
         .hover-scale-icon:hover {
             transform: scale(1.1);
+        }
+        .flatpickr-input {
+            padding-right: 40px !important;
+            background-color: white !important;
+            cursor: pointer;
+        }
+        .flatpickr-calendar {
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            border: 1px solid #e5e7eb;
+            border-radius: 0.75rem;
+        }
+        .flatpickr-day.today {
+            border-color: #4EAD68;
+        }
+        .flatpickr-day.selected {
+            background: #4EAD68;
+            border-color: #4EAD68;
         }
     </style>
 </head>
@@ -34,8 +67,7 @@
                     <img src="/home.png" class="h-8 w-8 hover-scale-icon">
                 </a>
                 <a href="/logout"
-                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600
-                              transition-all shadow-md">
+                   class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all shadow-md">
                     Logout
                 </a>
             </div>
@@ -45,7 +77,6 @@
 
 <div class="max-w-6xl mx-auto py-12 px-4">
     <div class="bg-white rounded-2xl shadow-xl p-8">
-        <!-- Tab Navigation -->
         <div class="relative border-b border-gray-200 mb-8">
             <div class="flex space-x-8">
                 <a href="/admin"
@@ -80,6 +111,41 @@
         <div class="admin-content">
             <h2 class="text-2xl font-bold text-gray-800 mb-6">All Preferences</h2>
 
+            <!-- Search Filters -->
+            <div class="mb-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="date-picker-wrapper">
+                    <input type="text" id="dateFilter"
+                           class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-all flatpickr-input"
+                           placeholder="Choose date..."
+                           aria-label="Select date">
+                    <svg class="calendar-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+
+                <div class="relative">
+                    <input type="text" id="userFilter"
+                           class="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-all"
+                           placeholder="Search user...">
+                </div>
+
+                <div class="relative">
+                    <select id="preferenceFilter"
+                            class="custom-select w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 hover:border-green-300 transition-all">
+                        <option value="">All Preferences</option>
+                        <option value="veg">Veg</option>
+                        <option value="chicken">Chicken</option>
+                        <option value="fish">Fish</option>
+                    </select>
+                </div>
+
+                <button onclick="resetFilters()"
+                        class="w-full bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-all">
+                    Clear Filters
+                </button>
+            </div>
+
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -110,12 +176,125 @@
                     </tbody>
                 </table>
             </div>
+            <div id="no-results" class="text-center py-8 text-gray-500" style="display: none">
+                No preferences found matching your criteria
+            </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 <script>
+    // Enhanced Flatpickr Initialization
+    const datePicker = flatpickr("#dateFilter", {
+        // altInput: true,
+        // altFormat: "F j, Y",
+        // dateFormat: "Y-m-d",
+        allowInput: false,
+        clickOpens: true,
+        monthSelectorType: "dropdown",
+        static: true,
+        position: "auto",
+        theme: "light",
+        animate: true,
+        closeOnSelect: true,
+        disableMobile: true,
+        onOpen: function(selectedDates, dateStr, instance) {
+            instance.calendarContainer.style.zIndex = "10000";
+            instance.calendarContainer.classList.add("shadow-xl", "rounded-lg");
+        },
+        onClose: function(selectedDates, dateStr) {
+            filterTable();
+        }
+        // locale: {
+        //     firstDayOfWeek: 1,
+        //     weekdays: {
+        //         shorthand: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+        //         longhand: [
+        //             "Sunday",
+        //             "Monday",
+        //             "Tuesday",
+        //             "Wednesday",
+        //             "Thursday",
+        //             "Friday",
+        //             "Saturday"
+        //         ]
+        //     },
+        //     months: {
+        //         shorthand: [
+        //             "Jan",
+        //             "Feb",
+        //             "Mar",
+        //             "Apr",
+        //             "May",
+        //             "Jun",
+        //             "Jul",
+        //             "Aug",
+        //             "Sep",
+        //             "Oct",
+        //             "Nov",
+        //             "Dec"
+        //         ],
+        //         longhand: [
+        //             "January",
+        //             "February",
+        //             "March",
+        //             "April",
+        //             "May",
+        //             "June",
+        //             "July",
+        //             "August",
+        //             "September",
+        //             "October",
+        //             "November",
+        //             "December"
+        //         ]
+        //     }
+        // }
+    });
+
+    // Filter functionality
+    function filterTable() {
+        const dateFilter = document.getElementById('dateFilter').value.toLowerCase();
+        const userFilter = document.getElementById('userFilter').value.toLowerCase();
+        const preferenceFilter = document.getElementById('preferenceFilter').value.toLowerCase();
+
+        let visibleCount = 0;
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            const date = row.children[0].textContent.toLowerCase();
+            const user = row.children[1].textContent.toLowerCase();
+            const preference = row.children[2].textContent.toLowerCase();
+
+            const dateMatch = date.includes(dateFilter) || !dateFilter;
+            const userMatch = user.includes(userFilter) || !userFilter;
+            const prefMatch = preference.includes(preferenceFilter) || !preferenceFilter;
+
+            if (dateMatch && userMatch && prefMatch) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        document.getElementById('no-results').style.display = visibleCount > 0 ? 'none' : 'block';
+    }
+
+    // Reset filters
+    function resetFilters() {
+        datePicker.clear();
+        document.getElementById('userFilter').value = '';
+        document.getElementById('preferenceFilter').value = '';
+        filterTable();
+    }
+
+    // Event listeners
+    document.getElementById('userFilter').addEventListener('input', filterTable);
+    document.getElementById('preferenceFilter').addEventListener('change', filterTable);
+
+    // Toast configuration and delete handlers
     const toastConfig = {
         duration: 3000,
         close: true,

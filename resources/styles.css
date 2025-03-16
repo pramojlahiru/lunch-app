@@ -206,3 +206,16 @@ a:hover:not(.text-blue-600) {
         transform: translateY(0);
     }
 }
+
+.date-picker-wrapper {
+    position: relative;
+}
+
+.date-picker-wrapper .calendar-icon {
+    position: absolute;
+    right: 32px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: #4EAD68;
+}

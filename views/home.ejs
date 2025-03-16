@@ -8,6 +8,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/styles.css">
+    <style>
+        .date-picker-wrapper .calendar-icon {
+            top: 70%;
+            right: 15px;
+        }
+    </style>
 </head>
 <body class="bg-gray-100">
 <nav class="bg-white shadow-lg">
@@ -44,11 +50,15 @@
 
         <form action="/preference" method="post" id="preference-form">
             <!-- Date Picker -->
-            <div class="mb-8">
+            <div class="mb-8 date-picker-wrapper">
                 <label for="datePicker" class="block text-gray-700 text-sm font-semibold mb-2">Select Date</label>
                 <input type="text" id="datePicker" name="date"
                        class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 flatpickr"
-                       required aria-label="Select date">
+                       required aria-label="Select date" placeholder="Choose date...">
+                <svg class="calendar-icon w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
             </div>
 
             <!-- Meal Options -->
