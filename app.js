@@ -5,12 +5,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcrypt');
-const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('database.sqlite', sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
-  if (err) throw err;
-});
-db.configure('busyTimeout', 5000); // Handle concurrent writes
-
+const db = require('./db');
 const rateLimit = require('express-rate-limit');
 const { Parser } = require('json2csv');
 
@@ -44,11 +39,7 @@ app.use('/login', limiter);
 passport.use(new LocalStrategy(
     async (username, password, done) => {
       try {
-        const user = await new Promise((resolve, reject) => {
-          db.get('SELECT * FROM users WHERE username = ?', [username],
-              (err, row) => err ? reject(err) : resolve(row));
-        });
-
+        const user = await db.get('SELECT * FROM users WHERE username = $1', [username]);
         if (!user) return done(null, false);
         if (await bcrypt.compare(password, user.password)) return done(null, user);
         return done(null, false);
@@ -67,45 +58,30 @@ passport.use(new GoogleStrategy({
         const email = profile.emails[0].value;
         const username = email.split('@')[0];
 
-        const existingUser = await new Promise((resolve, reject) => {
-          db.get(
-              'SELECT * FROM users WHERE google_id = ? OR email = ?',
-              [profile.id, email],
-              (err, row) => err ? reject(err) : resolve(row)
-          );
-        });
+        const existingUser = await db.get(
+            'SELECT * FROM users WHERE google_id = $1 OR email = $2',
+            [profile.id, email]
+        );
 
         if (existingUser) {
           if (!existingUser.google_id && existingUser.email === email) {
-            await new Promise((resolve, reject) => {
-              db.run(
-                  'UPDATE users SET google_id = ? WHERE id = ?',
-                  [profile.id, existingUser.id],
-                  (err) => err ? reject(err) : resolve()
-              );
-            });
+            await db.run(
+                'UPDATE users SET google_id = $1 WHERE id = $2',
+                [profile.id, existingUser.id]
+            );
           }
           return done(null, existingUser);
         }
 
-        const { lastID } = await new Promise((resolve, reject) => {
-          db.run(
-              'INSERT INTO users (google_id, email, display_name, role, username) VALUES (?, ?, ?, ?, ?)',
-              [profile.id, email, profile.displayName, 'user', username],
-              function(err) {
-                if (err) reject(err);
-                resolve({ lastID: this.lastID });
-              }
-          );
-        });
+        const { lastID } = await db.run(
+            'INSERT INTO users (google_id, email, display_name, role, username) VALUES ($1, $2, $3, $4, $5)',
+            [profile.id, email, profile.displayName, 'user', username]
+        );
 
-        const newUser = await new Promise((resolve, reject) => {
-          db.get(
-              'SELECT * FROM users WHERE id = ?',
-              [lastID],
-              (err, row) => err ? reject(err) : resolve(row)
-          );
-        });
+        const newUser = await db.get(
+            'SELECT * FROM users WHERE id = $1',
+            [lastID]
+        );
 
         done(null, newUser);
       } catch (err) {
@@ -124,13 +100,10 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = await new Promise((resolve, reject) => {
-      db.get(
-          'SELECT id, username, email, display_name, role, google_id FROM users WHERE id = ?',
-          [id],
-          (err, row) => err ? reject(err) : resolve(row)
-      );
-    });
+    const user = await db.get(
+        'SELECT id, username, email, display_name, role, google_id FROM users WHERE id = $1',
+        [id]
+    );
 
     if (!user) return done(new Error('User not found in database'));
     done(null, {
@@ -167,13 +140,10 @@ app.get('/logout', (req, res, next) => {
 
 app.get('/home', ensureAuthenticated, async (req, res) => {
   try {
-    const preferences = await new Promise((resolve, reject) => {
-      db.all(
-          'SELECT date, preference FROM lunch_preferences WHERE user_id = ?',
-          [req.user.id],
-          (err, rows) => err ? reject(err) : resolve(rows)
-      );
-    });
+    const preferences = await db.all(
+      'SELECT date, preference FROM lunch_preferences WHERE user_id = $1',
+      [req.user.id]
+    );
 
     const preferencesMap = preferences.reduce((acc, p) => {
       acc[p.date] = p.preference;
@@ -231,13 +201,10 @@ app.post('/preference', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ error: 'Weekends are not allowed' });
     }
 
-    await new Promise((resolve, reject) => {
-      db.run(
-          'INSERT OR REPLACE INTO lunch_preferences (user_id, preference, date) VALUES (?, ?, ?)',
-          [req.user.id, preference, date],
-          (err) => err ? reject(err) : resolve()
-      );
-    });
+    await db.run(
+        'INSERT INTO lunch_preferences (user_id, preference, date) VALUES ($1, $2, $3) ON CONFLICT (user_id, date) DO UPDATE SET preference = EXCLUDED.preference',
+        [req.user.id, preference, date]
+    );
 
     res.json({ message: isEdit ? 'Preference updated successfully!' : 'Preference saved successfully!' });
   } catch (err) {
@@ -248,18 +215,15 @@ app.post('/preference', ensureAuthenticated, async (req, res) => {
 
 app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
-    const preferences = await new Promise((resolve, reject) => {
-      db.all(
-          `SELECT lp.date, lp.preference, 
-          COUNT(*) as count,
-          GROUP_CONCAT(u.display_name) as display_names
-           FROM lunch_preferences lp
-           JOIN users u ON u.id = lp.user_id
-           GROUP BY lp.date, lp.preference 
-           ORDER BY lp.date DESC`,
-          (err, rows) => err ? reject(err) : resolve(rows)
-      );
-    });
+    const preferences = await db.all(
+        `SELECT lp.date, lp.preference, 
+        COUNT(*) as count,
+        string_agg(u.display_name, ',') as display_names
+         FROM lunch_preferences lp
+         JOIN users u ON u.id = lp.user_id
+         GROUP BY lp.date, lp.preference 
+         ORDER BY lp.date DESC`
+    );
 
     // Group by date
     const groupedData = preferences.reduce((acc, item) => {
@@ -287,13 +251,11 @@ app.get('/admin', ensureAuthenticated, ensureAdmin, async (req, res) => {
 
 app.get('/export-preferences', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
-    const preferences = await new Promise((resolve, reject) => {
-      db.all(
-          `SELECT lp.date, lp.preference, u.display_name 
-                 FROM lunch_preferences lp
-                 JOIN users u ON u.id = lp.user_id`,
-          (err, rows) => err ? reject(err) : resolve(rows))
-    });
+    const preferences = await db.all(
+        `SELECT lp.date, lp.preference, u.display_name 
+               FROM lunch_preferences lp
+               JOIN users u ON u.id = lp.user_id`
+    );
 
     const fields = ['date', 'preference', 'display_name'];
     const parser = new Parser({ fields });
@@ -311,11 +273,7 @@ app.get('/export-preferences', ensureAuthenticated, ensureAdmin, async (req, res
 // User Management Routes
 app.get('/admin/users', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
-    const users = await new Promise((resolve, reject) => {
-      db.all('SELECT id, display_name, username, email, role, google_id FROM users', (err, rows) => {
-        err ? reject(err) : resolve(rows);
-      });
-    });
+    const users = await db.all('SELECT id, display_name, username, email, role, google_id FROM users');
 
     res.render('admin-users', {
       user: req.user, //Logged-in user
@@ -335,13 +293,10 @@ app.post('/admin/users/:id/role', ensureAuthenticated, ensureAdmin, async (req, 
       throw new AppError('Cannot modify your own role', 403);
     }
     const { role } = req.body;
-    await new Promise((resolve, reject) => {
-      db.run(
-          'UPDATE users SET role = ? WHERE id = ?',
-          [role, req.params.id],
-          (err) => err ? reject(err) : resolve()
-      );
-    });
+    await db.run(
+        'UPDATE users SET role = $1 WHERE id = $2',
+        [role, req.params.id]
+    );
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update role' });
@@ -350,11 +305,7 @@ app.post('/admin/users/:id/role', ensureAuthenticated, ensureAdmin, async (req, 
 
 app.post('/admin/users/:id/delete', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
-    await new Promise((resolve, reject) => {
-      db.run('DELETE FROM users WHERE id = ?', [req.params.id], (err) => {
-        err ? reject(err) : resolve();
-      });
-    });
+    await db.run('DELETE FROM users WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete user' });
@@ -364,15 +315,13 @@ app.post('/admin/users/:id/delete', ensureAuthenticated, ensureAdmin, async (req
 // Enhanced Preferences Management
 app.get('/admin/preferences', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
-    const preferences = await new Promise((resolve, reject) => {
-      db.all(`
+    const preferences = await db.all(`
                 SELECT lp.id, lp.date, lp.preference, 
                     u.id as user_id, u.display_name, u.email
                 FROM lunch_preferences lp
                 JOIN users u ON lp.user_id = u.id
                 ORDER BY lp.date DESC
-            `, (err, rows) => err ? reject(err) : resolve(rows));
-    });
+            `);
 
     res.render('admin-preferences', {
       user: req.user,
@@ -387,11 +336,7 @@ app.get('/admin/preferences', ensureAuthenticated, ensureAdmin, async (req, res)
 
 app.post('/admin/preferences/:id/delete', ensureAuthenticated, ensureAdmin, async (req, res) => {
   try {
-    await new Promise((resolve, reject) => {
-      db.run('DELETE FROM lunch_preferences WHERE id = ?', [req.params.id], (err) => {
-        err ? reject(err) : resolve();
-      });
-    });
+    await db.run('DELETE FROM lunch_preferences WHERE id = $1', [req.params.id]);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to delete preference' });
@@ -425,13 +370,10 @@ function ensureAdmin(req, res, next) {
 }
 
 async function checkExistingPreference(userId, date) {
-  const existing = await new Promise((resolve, reject) => {
-    db.get(
-        'SELECT 1 FROM lunch_preferences WHERE user_id = ? AND date = ?',
-        [userId, date],
-        (err, row) => err ? reject(err) : resolve(row)
-    );
-  });
+  const existing = await db.get(
+      'SELECT 1 FROM lunch_preferences WHERE user_id = $1 AND date = $2',
+      [userId, date]
+  );
   return !!existing;
 }
 
@@ -442,4 +384,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

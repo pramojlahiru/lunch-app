@@ -21,7 +21,7 @@
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
-    "sqlite3": "^5.1.7",
+    "pg": "^8.11.3",
     "toastify-js": "^1.12.0"
   }
 }
